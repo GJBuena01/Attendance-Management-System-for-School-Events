@@ -1,21 +1,37 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { NavigationContainer } from '@react-navigation/native';
+import {
+  createNativeStackNavigator,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
+import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import screens from './screens';
 
-// You can import supported modules from npm
-import { Card } from 'react-native-paper';
 
-// or any files within the Snack
-import AssetExample from './components/AssetExample';
+type RootStackParamList = {
+  Login: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.paragraph}>
-        Change code in the editor and watch it change on your phone! Save to get a shareable url.
-      </Text>
-      <Card>
-        <AssetExample />
-      </Card>
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={screens.LoginScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
