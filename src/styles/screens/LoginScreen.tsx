@@ -1,8 +1,8 @@
 import { Text, View } from 'react-native';
-import { LoginScreenStyles } from './LoginScreen.style';
-import { globalStyles } from '../styles/GlobalStyles';
+import { LoginScreenStyles } from '../LoginScreen.style';
+import { globalStyles } from '../GlobalStyles';
 
-export function LoginScreen() {
+/* export function LoginScreen() {
   return (
     <View style={[globalStyles.screen, globalStyles.centered]}>
         <Text style={LoginScreenStyles.loginHeader}>
@@ -13,4 +13,4 @@ export function LoginScreen() {
       </Text>
     </View>
   );
-}
+} */
