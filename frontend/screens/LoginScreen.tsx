@@ -1,7 +1,7 @@
 import { Text, View, TextInput, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { LoginScreenStyles } from '../LoginScreen.style';
-import { globalStyles } from '../GlobalStyles';
+import { LoginScreenStyles } from '../styles/LoginScreen.style';
+import { globalStyles } from '../styles/GlobalStyles.style';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
