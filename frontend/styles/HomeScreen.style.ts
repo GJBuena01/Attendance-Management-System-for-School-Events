@@ -9,6 +9,16 @@ export const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 32,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  headerText: {
+    flex: 1,
+    marginRight: 12,
+  },
   title: {
     fontSize: 25,
     fontWeight: '800',
@@ -19,6 +29,16 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     color: '#64748b',
     marginBottom: 18,
+  },
+  refreshButton: {
+    backgroundColor: '#1d4ed8',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  refreshText: {
+    color: '#ffffff',
+    fontWeight: '700',
   },
   sectionPanel: {
     backgroundColor: '#ffffff',

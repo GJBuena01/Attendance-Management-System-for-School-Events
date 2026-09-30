@@ -1,5 +1,6 @@
 import express from "express";
 import attendancesRouter from "./routes/attendances.routes";
+import eventsRouter from "./routes/events.routes";
 
 const app = express();
 const port = 3000;
@@ -11,6 +12,7 @@ app.get("/api/health", (_request, response) => {
 });
 
 app.use("/api", attendancesRouter);
+app.use("/api", eventsRouter);
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`API running at http://localhost:${port}`);

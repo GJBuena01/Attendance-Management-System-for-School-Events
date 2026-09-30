@@ -7,15 +7,26 @@ import { styles } from '../styles/DrawerStyles.style';
 import HomeScreen from '../screens/HomeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EventScreen from '../screens/EventScreen';
+import type { UserRole } from '../types/event';
 
 const Drawer = createDrawerNavigator();
 
-export default function DrawerNavigation() {
+type DrawerNavigationProps = {
+  route?: {
+    params?: {
+      role?: UserRole;
+    };
+  };
+};
+
+export default function DrawerNavigation({ route }: DrawerNavigationProps) {
+  const role = route?.params?.role ?? 'student';
+
   return (
-    <Drawer.Navigator>
+    <Drawer.Navigator id="MainDrawer">
       <Drawer.Screen
         name="Home"
-        component={HomeScreen}
+        children={() => <HomeScreen />}
         options={({ navigation }) => ({
           drawerIcon: ({ color, size }) => (
             <Ionicons
@@ -39,7 +50,7 @@ export default function DrawerNavigation() {
 
       <Drawer.Screen
         name="Events"
-        component={EventScreen}
+        children={() => <EventScreen role={role} />}
         options={{
           drawerIcon: ({ color, size }) => (
             <Ionicons

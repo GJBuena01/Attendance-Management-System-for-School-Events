@@ -1,50 +1,68 @@
-import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
-import { mockAttendance } from '../mock-data/mockAttendance';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { getEvents } from '../api/events';
+import type { EventRecord } from '../types/event';
 import { styles } from '../styles/HomeScreen.style';
 
 export default function HomeScreen() {
-  const emptyData = mockAttendance.length === 0;
+  const [events, setEvents] = useState<EventRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadEvents = useCallback(async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      setEvents(await getEvents());
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to load events.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <Text style={styles.title}>Student Attendance</Text>
-      <Text style={styles.subtitle}>Attendance overview</Text>
+      <View style={styles.headerRow}>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>School events</Text>
+          <Text style={styles.subtitle}>Shared event dashboard</Text>
+        </View>
+        <TouchableOpacity style={styles.refreshButton} onPress={() => void loadEvents()}>
+          <Text style={styles.refreshText}>Refresh</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.sectionPanel}>
-        <Text style={styles.sectionTitle}>Recent attendance</Text>
+        <Text style={styles.sectionTitle}>Available events</Text>
 
-        {emptyData ? (
+        {isLoading ? (
+          <Text style={styles.emptyStateText}>Loading events...</Text>
+        ) : error ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>Could not load events</Text>
+            <Text style={styles.emptyStateText}>{error}</Text>
+          </View>
+        ) : events.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateTitle}>No records yet</Text>
             <Text style={styles.emptyStateText}>
-              Student attendance will appear here once events are recorded.
+              Events created by an officer will appear here.
             </Text>
           </View>
         ) : (
-          mockAttendance.map((entry) => {
-            const isPresent = entry.status === 'Present';
-
+          events.map((event) => {
             return (
-              <View key={entry.id} style={styles.recordCard}>
+              <View key={event.id} style={styles.recordCard}>
                 <View style={styles.recordMain}>
-                  <Text style={styles.recordEvent}>{entry.eventName}</Text>
-                  <Text style={styles.recordDate}>{entry.date}</Text>
-                </View>
-
-                <View
-                  style={[
-                    styles.statusBadge,
-                    isPresent ? styles.presentBadge : styles.absentBadge,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      isPresent ? styles.presentText : styles.absentText,
-                    ]}
-                  >
-                    {entry.status}
+                  <Text style={styles.recordEvent}>{event.name}</Text>
+                  <Text style={styles.recordDate}>
+                    {event.startDate} to {event.endDate} | {event.location}
                   </Text>
                 </View>
               </View>

@@ -50,4 +50,9 @@ export const LoginScreenStyles = StyleSheet.create({
   buttonWrapper: {
     marginTop: 8,
   },
+  error: {
+    color: '#b91c1c',
+    fontSize: 13,
+    marginBottom: 8,
+  },
 });
