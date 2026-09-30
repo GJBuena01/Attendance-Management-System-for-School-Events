@@ -16,5 +16,17 @@ database.exec(`
 		status TEXT NOT NULL DEFAULT 'present',
 		scanned_at TEXT NOT NULL,
 		UNIQUE (student_id, event_id)
+	);
+
+	CREATE TABLE IF NOT EXISTS events (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		description TEXT NOT NULL DEFAULT '',
+		start_date TEXT NOT NULL,
+		end_date TEXT NOT NULL,
+		location TEXT NOT NULL,
+		has_am_attendance INTEGER NOT NULL DEFAULT 0,
+		has_pm_attendance INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL
 	)
 `);
