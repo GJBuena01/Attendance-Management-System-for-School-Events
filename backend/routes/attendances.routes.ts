@@ -52,7 +52,7 @@ router.post("/attendance", (request, response) => {
 				 FROM attendances
 				 WHERE id = ?`,
 			)
-			.get(result.lastInsertRowid) as AttendanceRecord;
+			.get(result.lastInsertRowid) as unknown as AttendanceRecord;
 
 		response.status(201).json(attendance);
 	} catch (error) {

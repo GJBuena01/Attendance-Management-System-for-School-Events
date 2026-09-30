@@ -1,11 +1,11 @@
 import path from "node:path";
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 
 const databasePath = process.env.ATTENDANCE_DB_PATH
 	? path.resolve(process.env.ATTENDANCE_DB_PATH)
 	: path.resolve(process.cwd(), "DummySample.db");
 
-export const database = new Database(databasePath);
+export const database = new DatabaseSync(databasePath);
 
 database.exec(`
 	CREATE TABLE IF NOT EXISTS attendances (
