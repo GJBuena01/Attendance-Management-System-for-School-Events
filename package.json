@@ -2,8 +2,8 @@
   "license": "0BSD",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts",
+    "dev": "tsx watch backend/server.ts",
+    "start": "tsx backend/server.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
