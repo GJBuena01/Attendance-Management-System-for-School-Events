@@ -1,30 +1,32 @@
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import DrawerNavigation from './src/styles/navigation/DrawerNavigation';
 
-/* import { LoginScreen } from './src/styles/screens/LoginScreen'; */
+import LoginScreen from './frontend/screens/LoginScreen';
+import DrawerNavigation from './frontend/navigation/DrawerNavigation';
 
-/* type RootStackParamList = {
-  Login: undefined;
-};
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator id="RootStack" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-} */
+      <Stack.Navigator
+      id='AppStack'
+        initialRouteName="Login"
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+        />
 
-  export default function App() {
-  return (
-    <NavigationContainer>
-      <DrawerNavigation />
+        <Stack.Screen
+          name="Main"
+          component={DrawerNavigation}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }

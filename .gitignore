@@ -2,6 +2,9 @@
 
 # dependencies
 node_modules/
+*.db
+*.sqlite
+*.sqlite3
 
 # Expo
 .expo/
@@ -39,3 +42,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+#db
+*.db
+*.sqlite
+*.sqlite3
