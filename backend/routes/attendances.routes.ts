@@ -17,14 +17,14 @@ router.post("/attendance", (request, response) => {
 
 	if (
 		typeof studentId !== "string" ||
-		typeof eventId !== "string" ||
+		!Number.isSafeInteger(eventId) ||
 		typeof scannedBy !== "string" ||
 		!studentId.trim() ||
-		!eventId.trim() ||
+		eventId <= 0 ||
 		!scannedBy.trim()
 	) {
 		response.status(400).json({
-			error: "studentId, eventId, and scannedBy are required",
+			error: "studentId and scannedBy must be non-empty strings, and eventId must be a positive integer",
 		});
 		return;
 	}
@@ -32,13 +32,31 @@ router.post("/attendance", (request, response) => {
 	const scannedAt = new Date().toISOString();
 
 	try {
+		const student = database
+			.prepare("SELECT student_id FROM students WHERE student_id = ?")
+			.get(studentId.trim());
+
+		if (!student) {
+			response.status(404).json({ error: "Student not found" });
+			return;
+		}
+
+		const event = database
+			.prepare("SELECT id FROM events WHERE id = ?")
+			.get(eventId);
+
+		if (!event) {
+			response.status(404).json({ error: "Event not found" });
+			return;
+		}
+
 		const result = database
 			.prepare(
 				`INSERT INTO attendances
 					(student_id, event_id, scanned_by, status, scanned_at)
 				 VALUES (?, ?, ?, 'present', ?)`,
 			)
-			.run(studentId, eventId, scannedBy, scannedAt);
+			.run(studentId.trim(), eventId, scannedBy.trim(), scannedAt);
 
 		const attendance = database
 			.prepare(
@@ -56,7 +74,11 @@ router.post("/attendance", (request, response) => {
 
 		response.status(201).json(attendance);
 	} catch (error) {
-		if ((error as { code?: string }).code === "SQLITE_CONSTRAINT_UNIQUE") {
+		const message = (error as { message?: string }).message ?? "";
+		if (
+			(error as { code?: string }).code === "SQLITE_CONSTRAINT_UNIQUE" ||
+			message.includes("UNIQUE constraint failed: attendances")
+		) {
 			response.status(409).json({
 				error: "Attendance already exists for this student and event",
 			});
@@ -68,24 +90,40 @@ router.post("/attendance", (request, response) => {
 });
 
 router.get("/students/:studentId/attendance", (request, response) => {
-	const attendance = database
-		.prepare(
-			`SELECT
-				id,
-				event_id AS eventId,
-				scanned_by AS scannedBy,
-				status,
-				scanned_at AS scannedAt
-			 FROM attendances
-			 WHERE student_id = ?
-			 ORDER BY scanned_at ASC`,
-		)
-		.all(request.params.studentId);
+	try {
+		const studentId = request.params.studentId;
+		const student = database
+			.prepare("SELECT student_id FROM students WHERE student_id = ?")
+			.get(studentId);
 
-	response.json({
-		studentId: request.params.studentId,
-		attendance,
-	});
+		if (!student) {
+			response.status(404).json({ error: "Student not found" });
+			return;
+		}
+
+		const attendance = database
+			.prepare(
+				`SELECT
+					a.id,
+				a.event_id AS eventId,
+				e.name AS eventName,
+				e.start_date AS startDate,
+				e.end_date AS endDate,
+				e.location,
+				a.scanned_by AS scannedBy,
+				a.status,
+				a.scanned_at AS scannedAt
+				 FROM attendances a
+				 JOIN events e ON e.id = a.event_id
+				 WHERE a.student_id = ?
+				 ORDER BY a.scanned_at ASC`,
+			)
+			.all(studentId);
+
+		response.json({ studentId, attendance });
+	} catch {
+		response.status(500).json({ error: "Failed to retrieve student attendance" });
+	}
 });
 
 export default router;
