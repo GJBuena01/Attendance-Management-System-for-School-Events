@@ -8,25 +8,35 @@ const databasePath = process.env.ATTENDANCE_DB_PATH
 export const database = new DatabaseSync(databasePath);
 
 database.exec(`
-	CREATE TABLE IF NOT EXISTS attendances (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		student_id TEXT NOT NULL,
-		event_id TEXT NOT NULL,
-		scanned_by TEXT NOT NULL,
-		status TEXT NOT NULL DEFAULT 'present',
-		scanned_at TEXT NOT NULL,
-		UNIQUE (student_id, event_id)
+	PRAGMA foreign_keys = ON;
+
+	CREATE TABLE IF NOT EXISTS students (
+		student_id TEXT PRIMARY KEY,
+		full_name TEXT NOT NULL,
+		created_at TEXT NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS events (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
-		description TEXT NOT NULL DEFAULT '',
+		description TEXT,
 		start_date TEXT NOT NULL,
 		end_date TEXT NOT NULL,
 		location TEXT NOT NULL,
+		created_at TEXT NOT NULL,
 		has_am_attendance INTEGER NOT NULL DEFAULT 0,
-		has_pm_attendance INTEGER NOT NULL DEFAULT 0,
-		created_at TEXT NOT NULL
+		has_pm_attendance INTEGER NOT NULL DEFAULT 0
+	);
+
+	CREATE TABLE IF NOT EXISTS attendances (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		event_id INTEGER NOT NULL,
+		student_id TEXT NOT NULL,
+		scanned_by TEXT NOT NULL,
+		status TEXT NOT NULL DEFAULT 'present',
+		scanned_at TEXT NOT NULL,
+		FOREIGN KEY (event_id) REFERENCES events(id),
+		FOREIGN KEY (student_id) REFERENCES students(student_id),
+		UNIQUE (event_id, student_id)
 	)
 `);

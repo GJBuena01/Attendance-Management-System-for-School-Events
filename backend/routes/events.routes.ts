@@ -4,7 +4,7 @@ import { database } from "../data/database";
 interface EventRecord {
 	id: number;
 	name: string;
-	description: string;
+	description: string | null;
 	startDate: string;
 	endDate: string;
 	location: string;
@@ -18,7 +18,7 @@ const router = Router();
 const mapEvent = (event: Record<string, unknown>): EventRecord => ({
 	id: Number(event.id),
 	name: String(event.name),
-	description: String(event.description),
+	description: event.description === null ? null : String(event.description),
 	startDate: String(event.startDate),
 	endDate: String(event.endDate),
 	location: String(event.location),
@@ -103,25 +103,72 @@ router.post("/events", (request, response) => {
 	}
 });
 
-router.get("/events", (_request, response) => {
-	const events = database
-		.prepare(
-			`SELECT
-				id,
-				name,
-				description,
-				start_date AS startDate,
-				end_date AS endDate,
-				location,
-				has_am_attendance AS hasAmAttendance,
-				has_pm_attendance AS hasPmAttendance,
-				created_at AS createdAt
-			 FROM events
-			 ORDER BY created_at DESC`,
-		)
-		.all() as Record<string, unknown>[];
+router.get("/events", (request, response) => {
+	try {
+		const currentOnly = request.query.current === "true";
+		const currentDate = new Date().toISOString().slice(0, 10);
+		const events = database
+			.prepare(
+				`SELECT
+					id,
+					name,
+					description,
+					start_date AS startDate,
+					end_date AS endDate,
+					location,
+					has_am_attendance AS hasAmAttendance,
+					has_pm_attendance AS hasPmAttendance,
+					created_at AS createdAt
+				 FROM events
+				 WHERE ? = 0 OR (date(start_date) <= date(?) AND date(end_date) >= date(?))
+				 ORDER BY created_at DESC`,
+			)
+			.all(currentOnly ? 1 : 0, currentDate, currentDate) as Record<string, unknown>[];
 
-	response.json(events.map(mapEvent));
+		response.json(events.map(mapEvent));
+	} catch {
+		response.status(500).json({ error: "Failed to retrieve events" });
+	}
+});
+
+router.get("/events/:eventId/attendance", (request, response) => {
+	const eventId = Number(request.params.eventId);
+	if (!Number.isSafeInteger(eventId) || eventId <= 0) {
+		response.status(400).json({ error: "eventId must be a positive integer" });
+		return;
+	}
+
+	try {
+		const event = database
+			.prepare("SELECT id FROM events WHERE id = ?")
+			.get(eventId);
+
+		if (!event) {
+			response.status(404).json({ error: "Event not found" });
+			return;
+		}
+
+		const attendance = database
+			.prepare(
+				`SELECT
+					a.id,
+				a.event_id AS eventId,
+				a.student_id AS studentId,
+				s.full_name AS fullName,
+				a.scanned_by AS scannedBy,
+				a.status,
+				a.scanned_at AS scannedAt
+				 FROM attendances a
+				 JOIN students s ON s.student_id = a.student_id
+				 WHERE a.event_id = ?
+				 ORDER BY a.scanned_at ASC`,
+			)
+			.all(eventId);
+
+		response.json({ eventId, attendance });
+	} catch {
+		response.status(500).json({ error: "Failed to retrieve event attendance" });
+	}
 });
 
 export default router;
