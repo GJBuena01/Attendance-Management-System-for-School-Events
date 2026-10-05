@@ -75,16 +75,6 @@ export const styles = StyleSheet.create({
     minHeight: 72,
     textAlignVertical: 'top',
   },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  switchLabel: {
-    color: '#334155',
-    fontWeight: '600',
-  },
   saveButton: {
     alignItems: 'center',
     backgroundColor: '#1d4ed8',
@@ -126,11 +116,6 @@ export const styles = StyleSheet.create({
   recordDescription: {
     marginTop: 6,
     color: '#334155',
-  },
-  recordSessions: {
-    marginTop: 6,
-    color: '#0f766e',
-    fontWeight: '700',
   },
   errorPanel: {
     backgroundColor: '#fee2e2',
@@ -181,5 +166,160 @@ export const styles = StyleSheet.create({
   emptyStateText: {
     color: '#334155',
     fontSize: 14,
+  },
+  retryButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#1d4ed8',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginTop: 10,
+  },
+  selectedRecordCard: {
+    borderColor: '#1d4ed8',
+    borderWidth: 2,
+  },
+  selectEventText: {
+    color: '#1d4ed8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  selectedEventPanel: {
+    marginTop: 12,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#cbd5e1',
+  },
+  formTitle: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  formDescription: {
+    color: '#64748b',
+    fontSize: 13,
+    marginBottom: 14,
+  },
+  successPanel: {
+    backgroundColor: '#dcfce7',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  successText: {
+    color: '#166534',
+    fontWeight: '600',
+  },
+  viewAttendanceButton: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#1d4ed8',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  viewAttendanceButtonText: {
+    color: '#1d4ed8',
+    fontWeight: '700',
+  },
+  attendanceModal: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    paddingTop: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  attendanceModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  attendanceModalTitleContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  attendanceModalTitle: {
+    color: '#111827',
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  attendanceModalSubtitle: {
+    color: '#64748b',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  closeModalButton: {
+    backgroundColor: '#1d4ed8',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  closeModalButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  attendanceTableVerticalScroll: {
+    flex: 1,
+  },
+  eventWorkspaceContent: {
+    flex: 1,
+  },
+  eventWorkspaceDescription: {
+    color: '#64748b',
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  backToFormButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  backToFormButtonText: {
+    color: '#1d4ed8',
+    fontWeight: '700',
+  },
+  attendanceTable: {
+    minWidth: 790,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#ffffff',
+  },
+  attendanceTableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  attendanceTableHeader: {
+    backgroundColor: '#eaf0fb',
+  },
+  attendanceTableAlternateRow: {
+    backgroundColor: '#f8fafc',
+  },
+  attendanceTableCell: {
+    color: '#334155',
+    fontSize: 13,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    textAlignVertical: 'center',
+  },
+  attendanceTableStudentId: {
+    width: 125,
+  },
+  attendanceTableName: {
+    width: 175,
+  },
+  attendanceTableStatus: {
+    width: 105,
+  },
+  attendanceTableTimestamp: {
+    width: 190,
+  },
+  attendanceTableScanner: {
+    width: 195,
   },
 });

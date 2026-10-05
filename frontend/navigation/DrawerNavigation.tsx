@@ -26,7 +26,7 @@ export default function DrawerNavigation({ route }: DrawerNavigationProps) {
     <Drawer.Navigator id="MainDrawer">
       <Drawer.Screen
         name="Home"
-        children={() => <HomeScreen />}
+        children={() => <HomeScreen role={role} />}
         options={({ navigation }) => ({
           drawerIcon: ({ color, size }) => (
             <Ionicons
