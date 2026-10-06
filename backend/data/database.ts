@@ -30,28 +30,3 @@ database.exec(`
 		created_at TEXT NOT NULL
 	)
 `);
-
-const normalizeLegacyDate = (value: string): string | undefined => {
-	const parsed = new Date(value);
-	return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-};
-
-const normalizeLegacyDates = (
-	table: "events" | "attendances",
-	column: "start_date" | "end_date" | "created_at" | "scanned_at",
-) => {
-	const rows = database
-		.prepare(`SELECT id, ${column} AS value FROM ${table}`)
-		.all() as { id: number; value: string }[];
-	const update = database.prepare(`UPDATE ${table} SET ${column} = ? WHERE id = ?`);
-
-	for (const row of rows) {
-		const normalized = normalizeLegacyDate(row.value);
-		if (normalized && normalized !== row.value) update.run(normalized, row.id);
-	}
-};
-
-normalizeLegacyDates("events", "start_date");
-normalizeLegacyDates("events", "end_date");
-normalizeLegacyDates("events", "created_at");
-normalizeLegacyDates("attendances", "scanned_at");
