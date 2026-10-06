@@ -1,16 +1,25 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Switch } from 'react-native';
 import {
-  mockAttendance,
-  mockEvents,
-  type AttendanceRecord,
-  type MockEvent,
-} from '../mock-data/mockAttendance';
-import type { UserRole } from '../types/event';
+  createEvent,
+  getEventAttendance,
+  getEvents,
+  getStudentAttendance,
+  recordAttendance,
+} from '../api/events';
+import type {
+  Account,
+  AttendanceRecord,
+  CreateEventInput,
+  EventRecord,
+  StudentAttendanceRecord,
+  UserRole,
+} from '../types/event';
 import { styles } from '../styles/EventScreen.style';
 
 type EventScreenProps = {
   role: UserRole;
+  account?: Account;
 };
 
 type AttendanceForm = {
@@ -21,9 +30,12 @@ type AttendanceForm = {
 
 type EventForm = {
   name: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   location: string;
   description: string;
+  hasAmAttendance: boolean;
+  hasPmAttendance: boolean;
 };
 
 const emptyForm: AttendanceForm = {
@@ -34,15 +46,19 @@ const emptyForm: AttendanceForm = {
 
 const emptyEventForm: EventForm = {
   name: '',
-  date: '',
+  startDate: '',
+  endDate: '',
   location: '',
   description: '',
+  hasAmAttendance: true,
+  hasPmAttendance: true,
 };
 
-export default function EventScreen({ role }: EventScreenProps) {
-  const [events, setEvents] = useState<MockEvent[]>([]);
-  const [records, setRecords] = useState<AttendanceRecord[]>(mockAttendance);
-  const [selectedEvent, setSelectedEvent] = useState<MockEvent | null>(null);
+export default function EventScreen({ role, account }: EventScreenProps) {
+  const [events, setEvents] = useState<EventRecord[]>([]);
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [studentRecords, setStudentRecords] = useState<StudentAttendanceRecord[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventRecord | null>(null);
   const [form, setForm] = useState<AttendanceForm>(emptyForm);
   const [eventForm, setEventForm] = useState<EventForm>(emptyEventForm);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,22 +69,54 @@ export default function EventScreen({ role }: EventScreenProps) {
   const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setEvents(mockEvents);
-      setIsLoading(false);
-    }, 250);
-
-    return () => clearTimeout(timer);
+    void loadEvents();
   }, []);
 
-  const refreshEvents = () => {
+  useEffect(() => {
+    if (!selectedEvent || role !== 'officer') return;
+
+    void loadAttendance(selectedEvent.id);
+  }, [selectedEvent, role]);
+
+  useEffect(() => {
+    if (role !== 'student' || !account?.studentId) return;
+
+    void loadStudentAttendance(account.studentId);
+  }, [account?.studentId, role]);
+
+  const loadEvents = async () => {
     setIsLoading(true);
     setHasError(false);
     setSelectedEvent(null);
-    setTimeout(() => {
-      setEvents(mockEvents);
+    try {
+      setEvents(await getEvents());
+    } catch {
+      setHasError(true);
+    } finally {
       setIsLoading(false);
-    }, 250);
+    }
+  };
+
+  const refreshEvents = () => {
+    void loadEvents();
+  };
+
+  const loadAttendance = async (eventId: number) => {
+    try {
+      setRecords(await getEventAttendance(eventId));
+    } catch (requestError) {
+      setRecords([]);
+      setFormError(requestError instanceof Error ? requestError.message : 'Could not load attendance.');
+    }
+  };
+
+  const loadStudentAttendance = async (studentId: string) => {
+    try {
+      setStudentRecords(await getStudentAttendance(studentId));
+    } catch (requestError) {
+      setStudentRecords([]);
+      setFormError(requestError instanceof Error ? requestError.message : 'Could not load attendance.');
+    }
   };
 
   const updateForm = (field: keyof AttendanceForm, value: string) => {
@@ -83,59 +131,81 @@ export default function EventScreen({ role }: EventScreenProps) {
     setSuccessMessage('');
   };
 
-  const handleCreateMockEvent = () => {
+  const handleCreateEvent = async () => {
     const name = eventForm.name.trim();
-    const date = eventForm.date.trim();
+    const startDate = eventForm.startDate.trim();
+    const endDate = eventForm.endDate.trim();
     const location = eventForm.location.trim();
     const description = eventForm.description.trim();
 
-    if (!name || !date || !location) {
-      setFormError('Event name, date, and location are required.');
+    if (!name || !startDate || !endDate || !location || !description) {
+      setFormError('Event name, dates, location, and description are required.');
       setSuccessMessage('');
       return;
     }
 
-    const newEvent: MockEvent = {
-      id: Date.now(),
+    if (endDate < startDate) {
+      setFormError('End date must be on or after the start date.');
+      setSuccessMessage('');
+      return;
+    }
+
+    if (!eventForm.hasAmAttendance && !eventForm.hasPmAttendance) {
+      setFormError('Select at least one attendance period.');
+      setSuccessMessage('');
+      return;
+    }
+
+    const input: CreateEventInput = {
       name,
-      date,
+      startDate,
+      endDate,
       location,
       description,
+      hasAmAttendance: eventForm.hasAmAttendance,
+      hasPmAttendance: eventForm.hasPmAttendance,
     };
 
-    setEvents((currentEvents) => [newEvent, ...currentEvents]);
-    setSelectedEvent(newEvent);
-    setEventForm(emptyEventForm);
-    setIsEventFormVisible(false);
-    setFormError('');
-    setSuccessMessage(`Event “${name}” was added to the mock list.`);
+    try {
+      const newEvent = await createEvent(input);
+      setEvents((currentEvents) => [newEvent, ...currentEvents]);
+      setSelectedEvent(newEvent);
+      setEventForm(emptyEventForm);
+      setIsEventFormVisible(false);
+      setFormError('');
+      setSuccessMessage(`${name} was added.`);
+    } catch (requestError) {
+      setFormError(requestError instanceof Error ? requestError.message : 'Could not create event.');
+      setSuccessMessage('');
+    }
   };
 
-  const submitAttendance = () => {
+  const submitAttendance = async () => {
     if (!selectedEvent) return;
 
     const studentId = form.studentId.trim();
     const studentName = form.studentName.trim();
-    const scannerName = form.scannerName.trim();
+    const scannerName = form.scannerName.trim() || account?.fullName.trim();
     if (!studentId || !studentName || !scannerName) {
       setFormError('Enter the student ID, full name, and officer name to record attendance.');
       setSuccessMessage('');
       return;
     }
 
-    const newRecord: AttendanceRecord = {
-      id: Date.now(),
-      eventId: selectedEvent.id,
-      studentId,
-      studentName,
-      status: 'Present',
-      timestamp: new Date().toLocaleString(undefined, { hour12: false }),
-      scannerName,
-    };
-    setRecords((currentRecords) => [...currentRecords, newRecord]);
-    setForm(emptyForm);
-    setFormError('');
-    setSuccessMessage(`${studentName} was marked present for ${selectedEvent.name}.`);
+    try {
+      const newRecord = await recordAttendance({
+        studentId,
+        eventId: selectedEvent.id,
+        scannedBy: scannerName,
+      });
+      setRecords((currentRecords) => [...currentRecords, newRecord]);
+      setForm(emptyForm);
+      setFormError('');
+      setSuccessMessage(`${studentName} was marked present for ${selectedEvent.name}.`);
+    } catch (requestError) {
+      setFormError(requestError instanceof Error ? requestError.message : 'Could not record attendance.');
+      setSuccessMessage('');
+    }
   };
 
   const selectedRecords = selectedEvent
@@ -180,9 +250,15 @@ export default function EventScreen({ role }: EventScreenProps) {
           />
           <TextInput
             style={styles.input}
-            placeholder="Date"
-            value={eventForm.date}
-            onChangeText={(value) => updateEventForm('date', value)}
+            placeholder="Start date (YYYY-MM-DD)"
+            value={eventForm.startDate}
+            onChangeText={(value) => updateEventForm('startDate', value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="End date (YYYY-MM-DD)"
+            value={eventForm.endDate}
+            onChangeText={(value) => updateEventForm('endDate', value)}
           />
           <TextInput
             style={styles.input}
@@ -197,7 +273,24 @@ export default function EventScreen({ role }: EventScreenProps) {
             onChangeText={(value) => updateEventForm('description', value)}
             multiline
           />
-          <TouchableOpacity style={styles.saveButton} onPress={handleCreateMockEvent}>
+          <View style={{ marginBottom: 8 }}>
+            <Text style={styles.formDescription}>Attendance periods</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Switch
+                value={eventForm.hasAmAttendance}
+                onValueChange={(value) => setEventForm((currentForm) => ({ ...currentForm, hasAmAttendance: value }))}
+              />
+              <Text>AM attendance</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Switch
+                value={eventForm.hasPmAttendance}
+                onValueChange={(value) => setEventForm((currentForm) => ({ ...currentForm, hasPmAttendance: value }))}
+              />
+              <Text>PM attendance</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.saveButton} onPress={handleCreateEvent}>
             <Text style={styles.buttonText}>Save event</Text>
           </TouchableOpacity>
         </View>
@@ -205,7 +298,7 @@ export default function EventScreen({ role }: EventScreenProps) {
 
       {hasError ? (
         <View style={styles.errorPanel}>
-          <Text style={styles.errorText}>Could not load the local event list.</Text>
+          <Text style={styles.errorText}>Could not load the event list.</Text>
           <TouchableOpacity style={styles.retryButton} onPress={refreshEvents}>
             <Text style={styles.buttonText}>Try again</Text>
           </TouchableOpacity>
@@ -215,7 +308,7 @@ export default function EventScreen({ role }: EventScreenProps) {
       ) : events.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateTitle}>No events yet</Text>
-          <Text style={styles.emptyStateText}>Mock events will appear here.</Text>
+          <Text style={styles.emptyStateText}>New events will appear here.</Text>
         </View>
       ) : (
         <>
@@ -239,7 +332,9 @@ export default function EventScreen({ role }: EventScreenProps) {
             >
               <View style={styles.recordInfo}>
                 <Text style={styles.recordEvent}>{event.name}</Text>
-                <Text style={styles.recordDate}>{event.date} | {event.location}</Text>
+                <Text style={styles.recordDate}>
+                  {event.startDate} - {event.endDate} | {event.location}
+                </Text>
                 {event.description ? (
                   <Text style={styles.recordDescription}>{event.description}</Text>
                 ) : null}
@@ -261,6 +356,10 @@ export default function EventScreen({ role }: EventScreenProps) {
       {selectedEvent && role === 'student' && !isLoading && !hasError ? (
         <View style={styles.selectedEventPanel}>
           <Text style={styles.sectionTitle}>{selectedEvent.name} attendance</Text>
+          <Text style={styles.emptyStateText}>Student ID: {account?.studentId ?? 'Unavailable'}</Text>
+          <Text style={styles.emptyStateText}>
+            Status: {studentRecords.some((record) => record.eventId === selectedEvent.id) ? 'Present' : 'Not attended'}
+          </Text>
         </View>
       ) : null}
       </ScrollView>
@@ -282,7 +381,7 @@ export default function EventScreen({ role }: EventScreenProps) {
               <Text style={styles.attendanceModalSubtitle}>
                 {isAttendanceListVisible
                   ? `${selectedRecords.length} attendee${selectedRecords.length === 1 ? '' : 's'}`
-                  : `${selectedEvent?.date} · ${selectedEvent?.location}`}
+                  : `${selectedEvent?.startDate} - ${selectedEvent?.endDate} · ${selectedEvent?.location}`}
               </Text>
             </View>
             <TouchableOpacity
@@ -347,16 +446,16 @@ export default function EventScreen({ role }: EventScreenProps) {
                             {record.studentId}
                           </Text>
                           <Text style={[styles.attendanceTableCell, styles.attendanceTableName]}>
-                            {record.studentName}
+                            {record.fullName}
                           </Text>
                           <Text style={[styles.attendanceTableCell, styles.attendanceTableStatus]}>
                             {record.status}
                           </Text>
                           <Text style={[styles.attendanceTableCell, styles.attendanceTableTimestamp]}>
-                            {record.timestamp}
+                            {record.scannedAt}
                           </Text>
                           <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>
-                            {record.scannerName}
+                            {record.scannedBy}
                           </Text>
                         </View>
                       ))}

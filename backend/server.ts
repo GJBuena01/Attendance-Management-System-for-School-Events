@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import type { ErrorRequestHandler } from "express";
 import attendancesRouter from "./routes/attendances.routes";
+import authRouter from "./routes/auth.routes";
 import eventsRouter from "./routes/events.routes";
 
 const app = express();
@@ -15,6 +16,7 @@ app.get("/api/health", (_request, response) => {
 });
 
 app.use("/api", attendancesRouter);
+app.use("/api", authRouter);
 app.use("/api", eventsRouter);
 
 app.use((_request, response) => {

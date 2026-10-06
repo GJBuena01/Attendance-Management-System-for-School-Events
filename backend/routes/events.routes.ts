@@ -47,9 +47,11 @@ router.post("/events", (request, response) => {
 		typeof hasAmAttendance !== "boolean" ||
 		typeof hasPmAttendance !== "boolean" ||
 		!name.trim() ||
+		!description.trim() ||
 		!startDate.trim() ||
 		!endDate.trim() ||
 		!location.trim() ||
+		endDate.trim() < startDate.trim() ||
 		(!hasAmAttendance && !hasPmAttendance)
 	) {
 		response.status(400).json({

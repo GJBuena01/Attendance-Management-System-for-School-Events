@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LoginScreenStyles } from '../styles/LoginScreen.style';
 import { globalStyles } from '../styles/GlobalStyles.style';
 import type { UserRole } from '../types/event';
+import { loginStudent } from '../api/auth';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -11,21 +12,20 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = () => {
-    const role: UserRole | null =
-      email.trim() === 'student' && password === 'student'
-        ? 'student'
-        : email.trim() === 'officer' && password === 'officer'
-          ? 'officer'
-          : null;
-
-    if (!role) {
-      setError('Use student/student or officer/officer.');
+  const handleLogin = async () => {
+    if (email.trim() === 'officer' && password === 'officer') {
+      setError('');
+      navigation.navigate({ name: 'Main', params: { role: 'officer', fullName: 'Officer' } } as never);
       return;
     }
 
-    setError('');
-    navigation.navigate({ name: 'Main', params: { role } } as never);
+    try {
+      const account = await loginStudent({ email: email.trim(), password });
+      setError('');
+      navigation.navigate({ name: 'Main', params: account } as never);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Could not log in.');
+    }
   };
 
   return (
@@ -34,13 +34,15 @@ export default function LoginScreen() {
         <Text style={LoginScreenStyles.loginHeader}>Login</Text>
         <Text style={LoginScreenStyles.subtitle}>School Event Attendance</Text>
 
-        <Text style={LoginScreenStyles.label}>Name</Text>
+        <Text style={LoginScreenStyles.label}>Email</Text>
         <TextInput
           style={LoginScreenStyles.input}
           placeholder="Enter your name"
           placeholderTextColor="#7f7f7f"
           value={email}
           onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
 
         <Text style={LoginScreenStyles.label}>Password</Text>
@@ -59,6 +61,12 @@ export default function LoginScreen() {
           <Button
             title="Login"
             onPress={handleLogin}
+          />
+        </View>
+        <View style={LoginScreenStyles.buttonWrapper}>
+          <Button
+            title="Create student account"
+            onPress={() => navigation.navigate({ name: 'Signup' } as never)}
           />
         </View>
       </View>

@@ -4,7 +4,8 @@ import { database } from "../data/database";
 interface AttendanceRecord {
 	id: number;
 	studentId: string;
-	eventId: string;
+	eventId: number;
+	fullName: string;
 	scannedBy: string;
 	status: "present";
 	scannedAt: string;
@@ -61,14 +62,16 @@ router.post("/attendance", (request, response) => {
 		const attendance = database
 			.prepare(
 				`SELECT
-					id,
-					student_id AS studentId,
-					event_id AS eventId,
-					scanned_by AS scannedBy,
-					status,
-					scanned_at AS scannedAt
-				 FROM attendances
-				 WHERE id = ?`,
+					a.id,
+					a.student_id AS studentId,
+					a.event_id AS eventId,
+					s.full_name AS fullName,
+					a.scanned_by AS scannedBy,
+					a.status,
+					a.scanned_at AS scannedAt
+				 FROM attendances a
+				 JOIN students s ON s.student_id = a.student_id
+				 WHERE a.id = ?`,
 			)
 			.get(result.lastInsertRowid) as unknown as AttendanceRecord;
 
