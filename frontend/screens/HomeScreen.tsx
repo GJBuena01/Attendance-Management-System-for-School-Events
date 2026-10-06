@@ -1,44 +1,78 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import {
-  mockAttendance,
-  mockEvents,
-  mockStudent,
-  type AttendanceRecord,
-  type MockEvent,
-} from '../mock-data/mockAttendance';
-import type { UserRole } from '../types/event';
+import { getEventAttendance, getEvents, getStudentAttendance } from '../api/events';
+import type { Account, AttendanceRecord, EventRecord, StudentAttendanceRecord, UserRole } from '../types/event';
 import { styles } from '../styles/HomeScreen.style';
 
 type HomeScreenProps = {
   role: UserRole;
+  account: Account;
 };
 
-export default function HomeScreen({ role }: HomeScreenProps) {
-  const [events, setEvents] = useState<MockEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<MockEvent | null>(null);
+export default function HomeScreen({ role, account }: HomeScreenProps) {
+  const [events, setEvents] = useState<EventRecord[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventRecord | null>(null);
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [studentRecords, setStudentRecords] = useState<StudentAttendanceRecord[]>([]);
+  const [attendeeCounts, setAttendeeCounts] = useState<Record<number, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isAttendeeListVisible, setIsAttendeeListVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setEvents(mockEvents);
-      setIsLoading(false);
-    }, 250);
+    void refreshEvents();
+  }, [account.studentId, role]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const refreshEvents = () => {
+  const refreshEvents = async () => {
     setIsLoading(true);
     setHasError(false);
     setSelectedEvent(null);
-    setTimeout(() => {
-      setEvents(mockEvents);
+    setIsAttendeeListVisible(false);
+
+    try {
+      const loadedEvents = await getEvents();
+      setEvents(loadedEvents);
+
+      if (role === 'officer') {
+        const attendanceLists = await Promise.all(
+          loadedEvents.map((event) => getEventAttendance(event.id)),
+        );
+        setAttendeeCounts(
+          Object.fromEntries(
+            loadedEvents.map((event, index) => [event.id, attendanceLists[index].length]),
+          ),
+        );
+      } else if (account.studentId) {
+        setStudentRecords(await getStudentAttendance(account.studentId));
+      }
+    } catch {
+      setHasError(true);
+      setEvents([]);
+      setRecords([]);
+      setStudentRecords([]);
+    } finally {
       setIsLoading(false);
-    }, 250);
+    }
   };
+
+  const selectEvent = async (event: EventRecord) => {
+    setSelectedEvent(event);
+    setIsAttendeeListVisible(false);
+
+    if (role === 'officer') {
+      try {
+        setRecords(await getEventAttendance(event.id));
+      } catch {
+        setRecords([]);
+        setHasError(true);
+      }
+    }
+  };
+
+  const selectedRecords = records.filter((record) => record.eventId === selectedEvent?.id);
+  const selectedStudentRecord = studentRecords.find(
+    (record) => record.eventId === selectedEvent?.id,
+  );
 
   const renderEventList = () => (
     <View style={styles.sectionPanel}>
@@ -46,10 +80,10 @@ export default function HomeScreen({ role }: HomeScreenProps) {
 
       {isLoading ? (
         <Text style={styles.emptyStateText}>Loading events...</Text>
-      ) : hasError ? (
+        ) : hasError ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateTitle}>Could not load events</Text>
-          <Text style={styles.emptyStateText}>The local event list is unavailable.</Text>
+          <Text style={styles.emptyStateText}>The event service is unavailable.</Text>
           <TouchableOpacity style={styles.retryButton} onPress={refreshEvents}>
             <Text style={styles.refreshText}>Try again</Text>
           </TouchableOpacity>
@@ -61,22 +95,21 @@ export default function HomeScreen({ role }: HomeScreenProps) {
         </View>
       ) : (
         events.map((event) => {
-          const attendance = mockAttendance.find(
-            (record) => record.eventId === event.id && record.studentId === mockStudent.id,
-          );
-          const attended = Boolean(attendance);
+          const attended = studentRecords.some((record) => record.eventId === event.id);
 
           return (
             <TouchableOpacity
               key={event.id}
               style={styles.recordCard}
-              onPress={() => setSelectedEvent(event)}
+              onPress={() => void selectEvent(event)}
               accessibilityRole="button"
               accessibilityLabel={`View ${role === 'officer' ? 'details' : 'attendance details'} for ${event.name}`}
             >
               <View style={styles.recordMain}>
                 <Text style={styles.recordEvent}>{event.name}</Text>
-                <Text style={styles.recordDate}>{event.date} | {event.location}</Text>
+                <Text style={styles.recordDate}>
+                  {event.startDate} - {event.endDate} | {event.location}
+                </Text>
               </View>
               {role === 'student' ? (
                 <View style={[styles.statusBadge, attended ? styles.presentBadge : styles.absentBadge]}>
@@ -84,7 +117,11 @@ export default function HomeScreen({ role }: HomeScreenProps) {
                     {attended ? 'Present' : 'Not attended'}
                   </Text>
                 </View>
-              ) : null}
+              ) : (
+                <Text style={styles.detailText}>
+                  {attendeeCounts[event.id] ?? 0} attendee{attendeeCounts[event.id] === 1 ? '' : 's'}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         })
@@ -117,7 +154,9 @@ export default function HomeScreen({ role }: HomeScreenProps) {
             <Text style={styles.backText}>‹  All events</Text>
           </TouchableOpacity>
           <Text style={styles.sectionTitle}>{selectedEvent.name}</Text>
-          <Text style={styles.detailText}>{selectedEvent.date}</Text>
+          <Text style={styles.detailText}>
+            {selectedEvent.startDate} - {selectedEvent.endDate}
+          </Text>
           <Text style={styles.detailText}>{selectedEvent.location}</Text>
           <Text style={styles.detailDescription}>{selectedEvent.description}</Text>
 
@@ -128,33 +167,24 @@ export default function HomeScreen({ role }: HomeScreenProps) {
               accessibilityRole="button"
             >
               <Text style={styles.viewAttendanceButtonText}>
-                View attendees ({mockAttendance.filter((record) => record.eventId === selectedEvent.id).length})
+                View attendees ({selectedRecords.length})
               </Text>
             </TouchableOpacity>
           ) : (
-            (() => {
-              const attendance = mockAttendance.find(
-                (record) =>
-                  record.eventId === selectedEvent.id && record.studentId === mockStudent.id,
-              );
-
-              return (
-                <View style={styles.attendanceDetails}>
-                  <Text style={styles.detailHeading}>Your attendance</Text>
-                  <Text style={styles.detailText}>
-                    Status: {attendance ? 'Present' : 'Not attended'}
-                  </Text>
-                  <Text style={styles.detailText}>
-                    Timestamp: {attendance?.timestamp ?? 'No attendance recorded'}
-                  </Text>
-                  <Text style={styles.detailText}>Student ID: {mockStudent.id}</Text>
-                  <Text style={styles.detailText}>Student name: {mockStudent.fullName}</Text>
-                  <Text style={styles.detailText}>
-                    Recorded by: {attendance?.scannerName ?? 'Not recorded'}
-                  </Text>
-                </View>
-              );
-            })()
+            <View style={styles.attendanceDetails}>
+              <Text style={styles.detailHeading}>Your attendance</Text>
+              <Text style={styles.detailText}>
+                Status: {selectedStudentRecord ? 'Present' : 'Not attended'}
+              </Text>
+              <Text style={styles.detailText}>
+                Timestamp: {selectedStudentRecord?.scannedAt ?? 'No attendance recorded'}
+              </Text>
+              <Text style={styles.detailText}>Student ID: {account.studentId ?? 'Unavailable'}</Text>
+              <Text style={styles.detailText}>Student name: {account.fullName}</Text>
+              <Text style={styles.detailText}>
+                Recorded by: {selectedStudentRecord?.scannedBy ?? 'Not recorded'}
+              </Text>
+            </View>
           )}
         </View>
       ) : renderEventList()}
@@ -171,8 +201,8 @@ export default function HomeScreen({ role }: HomeScreenProps) {
             <Text style={styles.attendanceModalTitle}>Event attendees</Text>
             <Text style={styles.attendanceModalSubtitle}>
               {selectedEvent?.name} · {
-                mockAttendance.filter((record) => record.eventId === selectedEvent?.id).length
-              } attendee{mockAttendance.filter((record) => record.eventId === selectedEvent?.id).length === 1 ? '' : 's'}
+                selectedRecords.length
+              } attendee{selectedRecords.length === 1 ? '' : 's'}
             </Text>
           </View>
           <TouchableOpacity
@@ -185,11 +215,7 @@ export default function HomeScreen({ role }: HomeScreenProps) {
           </TouchableOpacity>
         </View>
         {(() => {
-          const records: AttendanceRecord[] = mockAttendance.filter(
-            (record) => record.eventId === selectedEvent?.id,
-          );
-
-          return records.length === 0 ? (
+          return selectedRecords.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateTitle}>No attendees yet</Text>
               <Text style={styles.emptyStateText}>Attendance records for this event will appear here.</Text>
@@ -205,7 +231,7 @@ export default function HomeScreen({ role }: HomeScreenProps) {
                     <Text style={[styles.attendanceTableCell, styles.attendanceTableTimestamp]}>Timestamp</Text>
                     <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>Scanned by</Text>
                   </View>
-                  {records.map((record, index) => (
+                  {selectedRecords.map((record, index) => (
                     <View
                       key={record.id}
                       style={[
@@ -217,16 +243,16 @@ export default function HomeScreen({ role }: HomeScreenProps) {
                         {record.studentId}
                       </Text>
                       <Text style={[styles.attendanceTableCell, styles.attendanceTableName]}>
-                        {record.studentName}
+                        {record.fullName}
                       </Text>
                       <Text style={[styles.attendanceTableCell, styles.attendanceTableStatus]}>
                         {record.status}
                       </Text>
                       <Text style={[styles.attendanceTableCell, styles.attendanceTableTimestamp]}>
-                        {record.timestamp}
+                        {record.scannedAt}
                       </Text>
                       <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>
-                        {record.scannerName}
+                        {record.scannedBy}
                       </Text>
                     </View>
                   ))}

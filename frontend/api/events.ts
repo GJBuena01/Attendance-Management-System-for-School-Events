@@ -4,8 +4,9 @@ import type {
   EventRecord,
   StudentAttendanceRecord,
 } from '../types/event';
+import { API_BASE_URL } from './config';
 
-export const API_BASE_URL = 'http://192.168.1.13:3000';
+export { API_BASE_URL } from './config';
 
 const parseResponse = async (response: Response) => {
   const body = await response.json().catch(() => ({}));
