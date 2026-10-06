@@ -1,5 +1,6 @@
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { normalizeIsoDateTime } from "./date-time";
 
 const databasePath = process.env.ATTENDANCE_DB_PATH
 	? path.resolve(process.env.ATTENDANCE_DB_PATH)
@@ -30,3 +31,22 @@ database.exec(`
 		created_at TEXT NOT NULL
 	)
 `);
+
+for (const [table, column] of [
+	["events", "start_date"],
+	["events", "end_date"],
+	["events", "created_at"],
+	["attendances", "scanned_at"],
+] as const) {
+	const rows = database
+		.prepare(`SELECT id, ${column} AS value FROM ${table}`)
+		.all() as { id: number; value: string }[];
+	const update = database.prepare(`UPDATE ${table} SET ${column} = ? WHERE id = ?`);
+
+	for (const row of rows) {
+		const normalized = normalizeIsoDateTime(row.value);
+		if (normalized && normalized !== row.value) {
+			update.run(normalized, row.id);
+		}
+	}
+}
