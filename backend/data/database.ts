@@ -13,6 +13,8 @@ database.exec(`
 	CREATE TABLE IF NOT EXISTS students (
 		student_id TEXT PRIMARY KEY,
 		full_name TEXT NOT NULL,
+		email TEXT UNIQUE,
+		password TEXT,
 		created_at TEXT NOT NULL
 	);
 
@@ -40,3 +42,15 @@ database.exec(`
 		UNIQUE (event_id, student_id)
 	)
 `);
+
+try {
+	database.exec("ALTER TABLE students ADD COLUMN email TEXT");
+} catch {
+}
+
+try {
+	database.exec("ALTER TABLE students ADD COLUMN password TEXT");
+} catch {
+}
+
+database.exec("CREATE UNIQUE INDEX IF NOT EXISTS students_email_unique ON students(email)");

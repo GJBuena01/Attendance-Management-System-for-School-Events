@@ -4,11 +4,41 @@ import { database } from "../data/database";
 interface AttendanceRecord {
 	id: number;
 	studentId: string;
-	eventId: string;
+	eventId: number;
+	fullName: string;
 	scannedBy: string;
 	status: "present";
 	scannedAt: string;
 }
+
+interface StudentAttendanceRecord extends Omit<AttendanceRecord, "studentId" | "fullName"> {
+	eventName: string;
+	startDate: string;
+	endDate: string;
+	location: string;
+}
+
+const mapAttendance = (record: Record<string, unknown>): AttendanceRecord => ({
+	id: Number(record.id),
+	studentId: String(record.studentId),
+	eventId: Number(record.eventId),
+	fullName: String(record.fullName),
+	scannedBy: String(record.scannedBy),
+	status: "present",
+	scannedAt: String(record.scannedAt),
+});
+
+const mapStudentAttendance = (record: Record<string, unknown>): StudentAttendanceRecord => ({
+	id: Number(record.id),
+	eventId: Number(record.eventId),
+	eventName: String(record.eventName),
+	startDate: String(record.startDate),
+	endDate: String(record.endDate),
+	location: String(record.location),
+	scannedBy: String(record.scannedBy),
+	status: "present",
+	scannedAt: String(record.scannedAt),
+});
 
 const router = Router();
 
@@ -61,18 +91,20 @@ router.post("/attendance", (request, response) => {
 		const attendance = database
 			.prepare(
 				`SELECT
-					id,
-					student_id AS studentId,
-					event_id AS eventId,
-					scanned_by AS scannedBy,
-					status,
-					scanned_at AS scannedAt
-				 FROM attendances
-				 WHERE id = ?`,
+					a.id,
+					a.student_id AS studentId,
+					a.event_id AS eventId,
+					s.full_name AS fullName,
+					a.scanned_by AS scannedBy,
+					a.status,
+					a.scanned_at AS scannedAt
+				 FROM attendances a
+				 JOIN students s ON s.student_id = a.student_id
+				 WHERE a.id = ?`,
 			)
-			.get(result.lastInsertRowid) as unknown as AttendanceRecord;
+			.get(result.lastInsertRowid) as unknown as Record<string, unknown>;
 
-		response.status(201).json(attendance);
+		response.status(201).json(mapAttendance(attendance));
 	} catch (error) {
 		const message = (error as { message?: string }).message ?? "";
 		if (
@@ -118,9 +150,9 @@ router.get("/students/:studentId/attendance", (request, response) => {
 				 WHERE a.student_id = ?
 				 ORDER BY a.scanned_at ASC`,
 			)
-			.all(studentId);
+			.all(studentId) as Record<string, unknown>[];
 
-		response.json({ studentId, attendance });
+		response.json({ studentId, attendance: attendance.map(mapStudentAttendance) });
 	} catch {
 		response.status(500).json({ error: "Failed to retrieve student attendance" });
 	}
