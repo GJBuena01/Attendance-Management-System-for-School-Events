@@ -13,6 +13,16 @@ interface EventRecord {
 	createdAt: string;
 }
 
+interface AttendanceRecord {
+	id: number;
+	eventId: number;
+	studentId: string;
+	fullName: string;
+	scannedBy: string;
+	status: "present";
+	scannedAt: string;
+}
+
 const router = Router();
 
 const mapEvent = (event: Record<string, unknown>): EventRecord => ({
@@ -25,6 +35,16 @@ const mapEvent = (event: Record<string, unknown>): EventRecord => ({
 	hasAmAttendance: Boolean(event.hasAmAttendance),
 	hasPmAttendance: Boolean(event.hasPmAttendance),
 	createdAt: String(event.createdAt),
+});
+
+const mapAttendance = (record: Record<string, unknown>): AttendanceRecord => ({
+	id: Number(record.id),
+	eventId: Number(record.eventId),
+	studentId: String(record.studentId),
+	fullName: String(record.fullName),
+	scannedBy: String(record.scannedBy),
+	status: "present",
+	scannedAt: String(record.scannedAt),
 });
 
 router.post("/events", (request, response) => {
@@ -165,9 +185,9 @@ router.get("/events/:eventId/attendance", (request, response) => {
 				 WHERE a.event_id = ?
 				 ORDER BY a.scanned_at ASC`,
 			)
-			.all(eventId);
+			.all(eventId) as Record<string, unknown>[];
 
-		response.json({ eventId, attendance });
+		response.json({ eventId, attendance: attendance.map(mapAttendance) });
 	} catch {
 		response.status(500).json({ error: "Failed to retrieve event attendance" });
 	}
