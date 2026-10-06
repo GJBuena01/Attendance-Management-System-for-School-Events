@@ -3,7 +3,15 @@ import { database } from "../data/database";
 
 const router = Router();
 
-const createStudentId = () => `STU${Date.now()}${Math.floor(Math.random() * 1000)}`;
+const createStudentId = () => {
+	let studentId = '';
+
+	do {
+		studentId = String(Math.floor(100000 + Math.random() * 900000));
+	} while (database.prepare("SELECT 1 FROM students WHERE student_id = ?").get(studentId));
+
+	return studentId;
+};
 
 router.post("/auth/signup", (request, response) => {
 	const { fullName, email, password } = request.body ?? {};
