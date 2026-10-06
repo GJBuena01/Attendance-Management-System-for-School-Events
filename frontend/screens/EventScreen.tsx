@@ -24,8 +24,6 @@ type EventScreenProps = {
 
 type AttendanceForm = {
   studentId: string;
-  studentName: string;
-  scannerName: string;
 };
 
 type EventForm = {
@@ -40,8 +38,6 @@ type EventForm = {
 
 const emptyForm: AttendanceForm = {
   studentId: '',
-  studentName: '',
-  scannerName: '',
 };
 
 const emptyEventForm: EventForm = {
@@ -188,10 +184,9 @@ export default function EventScreen({ role, account }: EventScreenProps) {
     if (!selectedEvent) return;
 
     const studentId = form.studentId.trim();
-    const studentName = form.studentName.trim();
-    const scannerName = form.scannerName.trim() || account?.fullName.trim();
-    if (!studentId || !studentName || !scannerName) {
-      setFormError('Enter the student ID, full name, and officer name to record attendance.');
+    const scannerName = account?.fullName.trim();
+    if (!studentId || !scannerName) {
+      setFormError('Enter a student ID while signed in as an officer.');
       setSuccessMessage('');
       return;
     }
@@ -205,7 +200,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
       setRecords((currentRecords) => [...currentRecords, newRecord]);
       setForm(emptyForm);
       setFormError('');
-      setSuccessMessage(`${studentName} was marked present for ${selectedEvent.name}.`);
+      setSuccessMessage(`${newRecord.fullName} was marked present for ${selectedEvent.name}.`);
     } catch (requestError) {
       setFormError(requestError instanceof Error ? requestError.message : 'Could not record attendance.');
       setSuccessMessage('');
@@ -493,9 +488,9 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               </TouchableOpacity>
 
               <View style={styles.formPanel}>
-                <Text style={styles.formTitle}>Mock attendance entry</Text>
+                <Text style={styles.formTitle}>Attendance entry</Text>
                 <Text style={styles.formDescription}>
-                  Enter the details as if they were read by the event scanner.
+                  Enter the student ID as if it were read by the event scanner.
                 </Text>
                 <TextInput
                   style={styles.input}
@@ -504,18 +499,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   onChangeText={(value) => updateForm('studentId', value)}
                   autoCapitalize="characters"
                 />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Student full name"
-                  value={form.studentName}
-                  onChangeText={(value) => updateForm('studentName', value)}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Scanned by / officer name"
-                  value={form.scannerName}
-                  onChangeText={(value) => updateForm('scannerName', value)}
-                />
+                <Text style={styles.formDescription}>Scanned by: {account?.fullName ?? 'Officer'}</Text>
                 {formError ? (
                   <View style={styles.errorPanel}>
                     <Text style={styles.errorText}>{formError}</Text>

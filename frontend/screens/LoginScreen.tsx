@@ -5,6 +5,8 @@ import { LoginScreenStyles } from '../styles/LoginScreen.style';
 import { globalStyles } from '../styles/GlobalStyles.style';
 import { loginStudent } from '../api/auth';
 
+const officerNames = ['Sinampaga', 'Bardago', 'Israel', 'Torculas', 'Cabal'];
+
 export default function LoginScreen() {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
@@ -16,8 +18,14 @@ export default function LoginScreen() {
     setIsSubmitting(true);
     setError('');
 
-    if (email.trim() === 'officer' && password === 'officer') {
-      navigation.navigate({ name: 'Main', params: { role: 'officer', fullName: 'Officer' } } as never);
+    const loginName = email.trim();
+    const officerName =
+      loginName.toLowerCase() === 'officer'
+        ? 'Officer'
+        : officerNames.find((name) => name.toLowerCase() === loginName.toLowerCase());
+
+    if (officerName && password === 'officer') {
+      navigation.navigate({ name: 'Main', params: { role: 'officer', fullName: officerName } } as never);
       setIsSubmitting(false);
       return;
     }
@@ -41,7 +49,7 @@ export default function LoginScreen() {
         <Text style={LoginScreenStyles.label}>Email</Text>
         <TextInput
           style={LoginScreenStyles.input}
-          placeholder="Enter your email or student"
+          placeholder="Enter email, student, or officer name"
           placeholderTextColor="#7f7f7f"
           value={email}
           onChangeText={setEmail}
