@@ -67,6 +67,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const [isAttendanceListVisible, setIsAttendanceListVisible] = useState(false);
   const [formError, setFormError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     void loadEvents();
@@ -166,6 +167,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
       hasPmAttendance: eventForm.hasPmAttendance,
     };
 
+    setIsSubmitting(true);
     try {
       const newEvent = await createEvent(input);
       setEvents((currentEvents) => [newEvent, ...currentEvents]);
@@ -177,6 +179,8 @@ export default function EventScreen({ role, account }: EventScreenProps) {
     } catch (requestError) {
       setFormError(requestError instanceof Error ? requestError.message : 'Could not create event.');
       setSuccessMessage('');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -290,8 +294,17 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               <Text>PM attendance</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.saveButton} onPress={handleCreateEvent}>
-            <Text style={styles.buttonText}>Save event</Text>
+          {formError ? (
+            <View style={styles.errorPanel}>
+              <Text style={styles.errorText}>{formError}</Text>
+            </View>
+          ) : null}
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleCreateEvent}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.buttonText}>{isSubmitting ? 'Saving event...' : 'Save event'}</Text>
           </TouchableOpacity>
         </View>
       ) : null}

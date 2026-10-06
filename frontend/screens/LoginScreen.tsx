@@ -3,7 +3,6 @@ import { Text, View, TextInput, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LoginScreenStyles } from '../styles/LoginScreen.style';
 import { globalStyles } from '../styles/GlobalStyles.style';
-import type { UserRole } from '../types/event';
 import { loginStudent } from '../api/auth';
 
 export default function LoginScreen() {
@@ -11,20 +10,25 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogin = async () => {
+    setIsSubmitting(true);
+    setError('');
+
     if (email.trim() === 'officer' && password === 'officer') {
-      setError('');
       navigation.navigate({ name: 'Main', params: { role: 'officer', fullName: 'Officer' } } as never);
+      setIsSubmitting(false);
       return;
     }
 
     try {
       const account = await loginStudent({ email: email.trim(), password });
-      setError('');
       navigation.navigate({ name: 'Main', params: account } as never);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Could not log in.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -37,7 +41,7 @@ export default function LoginScreen() {
         <Text style={LoginScreenStyles.label}>Email</Text>
         <TextInput
           style={LoginScreenStyles.input}
-          placeholder="Enter your name"
+          placeholder="Enter your email or student"
           placeholderTextColor="#7f7f7f"
           value={email}
           onChangeText={setEmail}
@@ -59,8 +63,9 @@ export default function LoginScreen() {
 
         <View style={LoginScreenStyles.buttonWrapper}>
           <Button
-            title="Login"
+            title={isSubmitting ? 'Signing in...' : 'Login'}
             onPress={handleLogin}
+            disabled={isSubmitting}
           />
         </View>
         <View style={LoginScreenStyles.buttonWrapper}>

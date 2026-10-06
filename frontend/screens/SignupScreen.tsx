@@ -11,18 +11,23 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignup = async () => {
+    setError('');
     if (!fullName.trim() || !email.trim() || !password) {
       setError('Enter your full name, email, and password.');
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const account = await signupStudent({ fullName, email, password });
       navigation.navigate({ name: 'Main', params: account } as never);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Could not create account.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -62,7 +67,11 @@ export default function SignupScreen() {
         {error ? <Text style={LoginScreenStyles.error}>{error}</Text> : null}
 
         <View style={LoginScreenStyles.buttonWrapper}>
-          <Button title="Create account" onPress={handleSignup} />
+          <Button
+            title={isSubmitting ? 'Creating account...' : 'Create account'}
+            onPress={handleSignup}
+            disabled={isSubmitting}
+          />
         </View>
         <View style={LoginScreenStyles.buttonWrapper}>
           <Button
