@@ -1,16 +1,14 @@
 import express from "express";
 import attendancesRouter from "./routes/attendances.routes";
 import eventsRouter from "./routes/events.routes";
+import healthRouter from "./routes/health.routes";
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
 
-app.get("/api/health", (_request, response) => {
-  response.json({ status: "ok" });
-});
-
+app.use("/api", healthRouter);
 app.use("/api", attendancesRouter);
 app.use("/api", eventsRouter);
 
