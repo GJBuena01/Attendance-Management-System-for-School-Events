@@ -1,9 +1,10 @@
 import { StyleSheet } from 'react-native';
+import { colors, radii } from './theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#FCFAF8',
   },
   contentContainer: {
     padding: 20,
@@ -19,32 +20,36 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: '#64748b',
+    color: '#756A6D',
     fontWeight: '700',
   },
   title: {
     fontSize: 25,
     fontWeight: '800',
-    color: '#111827',
+    color: '#211B1D',
     marginTop: 4,
   },
   primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1d4ed8',
+    backgroundColor: '#6F1023',
     borderRadius: 10,
     padding: 11,
   },
   refreshButton: {
-    backgroundColor: '#1d4ed8',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    backgroundColor: colors.maroon,
+    borderRadius: radii.sm,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  refreshButtonText: {
+    color: colors.yellow,
+    fontWeight: '800',
   },
   addButton: {
     alignItems: 'center',
-    backgroundColor: '#0f766e',
+    backgroundColor: '#6F1023',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -57,18 +62,18 @@ export const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E9DFE1',
     padding: 16,
     marginBottom: 20,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#E9DFE1',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
-    color: '#111827',
+    color: '#211B1D',
     backgroundColor: '#f8fafc',
   },
   multilineInput: {
@@ -77,7 +82,7 @@ export const styles = StyleSheet.create({
   },
   saveButton: {
     alignItems: 'center',
-    backgroundColor: '#1d4ed8',
+    backgroundColor: '#6F1023',
     borderRadius: 8,
     padding: 12,
     marginTop: 8,
@@ -111,20 +116,20 @@ export const styles = StyleSheet.create({
   recordDate: {
     marginTop: 4,
     fontSize: 12,
-    color: '#64748b',
+    color: '#756A6D',
   },
   recordDescription: {
     marginTop: 6,
-    color: '#334155',
+    color: '#211B1D',
   },
   errorPanel: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#FCECEE',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: '#991b1b',
+    color: '#A52836',
   },
   statusBadge: {
     borderRadius: 999,
@@ -133,7 +138,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   statusPresent: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#E8F6EF',
     borderColor: '#166534',
   },
   statusAbsent: {
@@ -145,7 +150,7 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
   statusTextPresent: {
-    color: '#166534',
+    color: '#237A55',
   },
   statusTextAbsent: {
     color: '#991b1b',
@@ -176,11 +181,11 @@ export const styles = StyleSheet.create({
     marginTop: 10,
   },
   selectedRecordCard: {
-    borderColor: '#1d4ed8',
+    borderColor: colors.maroon,
     borderWidth: 2,
   },
   selectEventText: {
-    color: '#1d4ed8',
+    color: colors.maroon,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -213,20 +218,20 @@ export const styles = StyleSheet.create({
   },
   viewAttendanceButton: {
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#1d4ed8',
+    borderColor: '#6F1023',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   viewAttendanceButtonText: {
-    color: '#1d4ed8',
+    color: '#6F1023',
     fontWeight: '700',
   },
   attendanceModal: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#FCFAF8',
     paddingTop: 24,
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -242,12 +247,12 @@ export const styles = StyleSheet.create({
     marginRight: 12,
   },
   attendanceModalTitle: {
-    color: '#111827',
+    color: '#211B1D',
     fontSize: 22,
     fontWeight: '800',
   },
   attendanceModalSubtitle: {
-    color: '#64748b',
+    color: '#756A6D',
     fontSize: 14,
     marginTop: 4,
   },
@@ -295,7 +300,7 @@ export const styles = StyleSheet.create({
     borderBottomColor: '#e2e8f0',
   },
   attendanceTableHeader: {
-    backgroundColor: '#eaf0fb',
+    backgroundColor: '#F8EDEF',
   },
   attendanceTableAlternateRow: {
     backgroundColor: '#f8fafc',

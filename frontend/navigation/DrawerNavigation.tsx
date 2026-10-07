@@ -1,8 +1,10 @@
 import React from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { styles } from '../styles/DrawerStyles.style';
+import { colors } from '../styles/theme';
+import BrandMark from '../components/BrandMark';
 
 import HomeScreen from '../screens/HomeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -32,7 +34,31 @@ export default function DrawerNavigation({ route }: DrawerNavigationProps) {
   };
 
   return (
-    <Drawer.Navigator id="MainDrawer">
+    <Drawer.Navigator
+      id="MainDrawer"
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.maroon },
+        headerTintColor: colors.surface,
+        headerTitleStyle: { fontWeight: '800' },
+        drawerActiveTintColor: colors.maroon,
+        drawerActiveBackgroundColor: colors.maroonSoft,
+        drawerInactiveTintColor: colors.muted,
+        drawerLabelStyle: { fontWeight: '700', marginLeft: 2 },
+        drawerItemStyle: { borderRadius: 12, marginHorizontal: 12 },
+        drawerStyle: { width: 290, backgroundColor: colors.surface },
+      }}
+      drawerContent={(props) => (
+        <DrawerContentScrollView
+          {...props}
+          contentContainerStyle={styles.drawerContent}
+        >
+          <View style={styles.drawerBrandHeader}>
+            <BrandMark dark vertical />
+          </View>
+          <DrawerItemList {...props} />
+        </DrawerContentScrollView>
+      )}
+    >
       <Drawer.Screen
         name="Home"
         children={() => <HomeScreen role={role} account={account} />}
@@ -50,7 +76,7 @@ export default function DrawerNavigation({ route }: DrawerNavigationProps) {
               onPress={() => navigation.getParent()?.navigate('Login')}
               style={styles.logoutButton}
             >
-              <Text style={styles.logoutText}>Logout</Text>
+              <Text style={styles.logoutText}>Log out</Text>
             </TouchableOpacity>
           )
 
