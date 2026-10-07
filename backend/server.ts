@@ -4,6 +4,7 @@ import type { ErrorRequestHandler } from "express";
 import attendancesRouter from "./routes/attendances.routes";
 import authRouter from "./routes/auth.routes";
 import eventsRouter from "./routes/events.routes";
+import healthRouter from "./routes/health.routes";
 
 const app = express();
 const port = 3000;
@@ -11,10 +12,7 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/health", (_request, response) => {
-  response.json({ status: "ok" });
-});
-
+app.use("/api", healthRouter);
 app.use("/api", attendancesRouter);
 app.use("/api", authRouter);
 app.use("/api", eventsRouter);
