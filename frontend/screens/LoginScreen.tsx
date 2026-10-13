@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Text, View, TextInput, Button } from 'react-native';
+import { ActivityIndicator, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LoginScreenStyles } from '../styles/LoginScreen.style';
-import { globalStyles } from '../styles/GlobalStyles.style';
 import { loginStudent } from '../api/auth';
+import BrandMark from '../components/BrandMark';
+import { colors } from '../styles/theme';
 
 const officerNames = ['Sinampaga', 'Bardago', 'Israel', 'Torculas', 'Cabal'];
 
@@ -41,15 +42,16 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[globalStyles.screen, LoginScreenStyles.page]}>
+    <ScrollView contentContainerStyle={LoginScreenStyles.page} keyboardShouldPersistTaps="handled">
       <View style={LoginScreenStyles.card}>
-        <Text style={LoginScreenStyles.loginHeader}>Login</Text>
-        <Text style={LoginScreenStyles.subtitle}>School Event Attendance</Text>
+        <View style={LoginScreenStyles.brandContainer}>
+          <BrandMark vertical />
+        </View>
 
         <Text style={LoginScreenStyles.label}>Email</Text>
         <TextInput
           style={LoginScreenStyles.input}
-          placeholder="Enter email, student, or officer name"
+          placeholder="Email, student, or officer name"
           placeholderTextColor="#7f7f7f"
           value={email}
           onChangeText={setEmail}
@@ -69,20 +71,13 @@ export default function LoginScreen() {
 
         {error ? <Text style={LoginScreenStyles.error}>{error}</Text> : null}
 
-        <View style={LoginScreenStyles.buttonWrapper}>
-          <Button
-            title={isSubmitting ? 'Signing in...' : 'Login'}
-            onPress={handleLogin}
-            disabled={isSubmitting}
-          />
-        </View>
-        <View style={LoginScreenStyles.buttonWrapper}>
-          <Button
-            title="Create student account"
-            onPress={() => navigation.navigate({ name: 'Signup' } as never)}
-          />
-        </View>
+        <TouchableOpacity style={LoginScreenStyles.primaryButton} onPress={handleLogin} disabled={isSubmitting}>
+          {isSubmitting ? <ActivityIndicator color={colors.surface} /> : <Text style={LoginScreenStyles.primaryButtonText}>Sign in</Text>}
+        </TouchableOpacity>
+        <TouchableOpacity style={LoginScreenStyles.secondaryButton} onPress={() => navigation.navigate({ name: 'Signup' } as never)}>
+          <Text style={LoginScreenStyles.secondaryButtonText}>Create student account</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }

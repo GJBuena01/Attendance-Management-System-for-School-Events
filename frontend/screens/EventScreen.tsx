@@ -220,7 +220,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           <Text style={styles.title}>{role === 'officer' ? 'Officer events' : 'Event list'}</Text>
         </View>
         <TouchableOpacity style={styles.refreshButton} onPress={refreshEvents}>
-          <Text style={styles.buttonText}>Refresh</Text>
+          <Text style={styles.refreshButtonText}>Refresh</Text>
         </TouchableOpacity>
       </View>
 
@@ -278,6 +278,8 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               <Switch
                 value={eventForm.hasAmAttendance}
                 onValueChange={(value) => setEventForm((currentForm) => ({ ...currentForm, hasAmAttendance: value }))}
+                trackColor={{ false: '#E9DFE1', true: '#6F1023' }}
+                thumbColor="#FFFFFF"
               />
               <Text>AM attendance</Text>
             </View>
@@ -285,6 +287,8 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               <Switch
                 value={eventForm.hasPmAttendance}
                 onValueChange={(value) => setEventForm((currentForm) => ({ ...currentForm, hasPmAttendance: value }))}
+                trackColor={{ false: '#E9DFE1', true: '#6F1023' }}
+                thumbColor="#FFFFFF"
               />
               <Text>PM attendance</Text>
             </View>

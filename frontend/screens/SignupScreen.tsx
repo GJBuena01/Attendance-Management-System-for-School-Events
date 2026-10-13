@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Button, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { signupStudent } from '../api/auth';
-import { globalStyles } from '../styles/GlobalStyles.style';
 import { LoginScreenStyles } from '../styles/LoginScreen.style';
+import BrandMark from '../components/BrandMark';
+import { colors } from '../styles/theme';
 
 export default function SignupScreen() {
   const navigation = useNavigation();
@@ -32,10 +33,11 @@ export default function SignupScreen() {
   };
 
   return (
-    <View style={[globalStyles.screen, LoginScreenStyles.page]}>
+    <ScrollView contentContainerStyle={LoginScreenStyles.page} keyboardShouldPersistTaps="handled">
       <View style={LoginScreenStyles.card}>
-        <Text style={LoginScreenStyles.loginHeader}>Student signup</Text>
-        <Text style={LoginScreenStyles.subtitle}>Create an attendance account</Text>
+        <View style={LoginScreenStyles.brandContainer}>
+          <BrandMark vertical />
+        </View>
 
         <Text style={LoginScreenStyles.label}>Full name</Text>
         <TextInput
@@ -66,20 +68,13 @@ export default function SignupScreen() {
 
         {error ? <Text style={LoginScreenStyles.error}>{error}</Text> : null}
 
-        <View style={LoginScreenStyles.buttonWrapper}>
-          <Button
-            title={isSubmitting ? 'Creating account...' : 'Create account'}
-            onPress={handleSignup}
-            disabled={isSubmitting}
-          />
-        </View>
-        <View style={LoginScreenStyles.buttonWrapper}>
-          <Button
-            title="Back to login"
-            onPress={() => navigation.navigate({ name: 'Login' } as never)}
-          />
-        </View>
+        <TouchableOpacity style={LoginScreenStyles.primaryButton} onPress={handleSignup} disabled={isSubmitting}>
+          {isSubmitting ? <ActivityIndicator color={colors.surface} /> : <Text style={LoginScreenStyles.primaryButtonText}>Create account</Text>}
+        </TouchableOpacity>
+        <TouchableOpacity style={LoginScreenStyles.secondaryButton} onPress={() => navigation.navigate({ name: 'Login' } as never)}>
+          <Text style={LoginScreenStyles.secondaryButtonText}>Back to login</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
