@@ -1,5 +1,6 @@
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { normalizeStoredEventDate } from "./date-time";
 
 const databasePath = process.env.ATTENDANCE_DB_PATH
 	? path.resolve(process.env.ATTENDANCE_DB_PATH)
@@ -43,14 +44,52 @@ database.exec(`
 	)
 `);
 
-try {
+const studentColumns = new Set(
+	(database.prepare("PRAGMA table_info(students)").all() as Array<{ name: string }>).map(
+		(column) => column.name,
+	),
+);
+
+if (!studentColumns.has("email")) {
 	database.exec("ALTER TABLE students ADD COLUMN email TEXT");
-} catch {
 }
 
-try {
+if (!studentColumns.has("password")) {
 	database.exec("ALTER TABLE students ADD COLUMN password TEXT");
-} catch {
 }
 
 database.exec("CREATE UNIQUE INDEX IF NOT EXISTS students_email_unique ON students(email)");
+
+const eventDates = database
+	.prepare("SELECT id, start_date AS startDate, end_date AS endDate FROM events")
+	.all() as Array<{ id: number; startDate: string; endDate: string }>;
+const updateEventDates = database.prepare(
+	"UPDATE events SET start_date = ?, end_date = ? WHERE id = ?",
+);
+let unnormalizedDateCount = 0;
+
+database.exec("BEGIN");
+try {
+	for (const event of eventDates) {
+		const startDate = normalizeStoredEventDate(event.startDate, "start");
+		const endDate = normalizeStoredEventDate(event.endDate, "end");
+		if (!startDate || !endDate) {
+			unnormalizedDateCount += 1;
+			continue;
+		}
+
+		if (startDate !== event.startDate || endDate !== event.endDate) {
+			updateEventDates.run(startDate, endDate, event.id);
+		}
+	}
+	database.exec("COMMIT");
+} catch (error) {
+	database.exec("ROLLBACK");
+	throw error;
+}
+
+if (unnormalizedDateCount > 0) {
+	console.warn(
+		`Could not normalize event dates for ${unnormalizedDateCount} legacy event(s); their stored values were preserved.`,
+	);
+}
