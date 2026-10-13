@@ -521,6 +521,16 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                 >
                   <Text style={styles.buttonText}>Record attendance</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.scanQrButton}
+                    onPress={() => {
+                      setFormError('QR scanning will be added next.');
+                      setSuccessMessage('');
+                    }}
+                    accessibilityRole="button"
+                  >
+                  <Text style={styles.scanQrButtonText}>Scan QR</Text>
+                </TouchableOpacity>
               </View>
             </ScrollView>
           )}
