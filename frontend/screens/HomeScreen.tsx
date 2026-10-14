@@ -68,7 +68,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
       }
     }
   };
-
+      
   const selectedRecords = records.filter((record) => record.eventId === selectedEvent?.id);
   const selectedStudentRecord = studentRecords.find(
     (record) => record.eventId === selectedEvent?.id,
@@ -188,6 +188,17 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           )}
         </View>
       ) : renderEventList()}
+      {role === 'student' ? (
+        <TouchableOpacity
+          style={styles.generateQrButton}
+          onPress={() => {
+            // Temporary action
+          }}
+          accessibilityRole="button"
+        >
+          <Text style={styles.generateQrButtonText}>Generate QR</Text>
+        </TouchableOpacity>
+      ) : null}
     </ScrollView>
     <Modal
       visible={role === 'officer' && isAttendeeListVisible && selectedEvent !== null}

@@ -247,5 +247,15 @@ export const styles = StyleSheet.create({
   },
   attendanceTableScanner: {
     width: 195,
+  },generateQrButton: {
+  alignItems: 'center',
+  backgroundColor: colors.maroon,
+  borderRadius: radii.sm,
+  padding: 12,
+  marginTop: 16,
   },
+  generateQrButtonText: {
+  color: colors.surface,
+  fontWeight: '800',
+},
 });
