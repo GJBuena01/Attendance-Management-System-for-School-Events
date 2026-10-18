@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import {
   createEvent,
   getEventAttendance,
@@ -244,6 +245,14 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           <Text style={styles.refreshButtonText}>Refresh</Text>
         </TouchableOpacity>
       </View>
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={19} color={styles.searchIcon.color} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search events"
+          placeholderTextColor={styles.searchPlaceholder.color}
+        />
+      </View>
 
       {role === 'officer' ? (
         <TouchableOpacity
@@ -440,6 +449,14 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               >
                 <Text style={styles.backToFormButtonText}>‹  Back to event form</Text>
               </TouchableOpacity>
+              <View style={styles.attendeeSearchBar}>
+                <Ionicons name="search-outline" size={19} color={styles.searchIcon.color} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="name or id"
+                  placeholderTextColor={styles.searchPlaceholder.color}
+                />
+              </View>
               {selectedRecords.length === 0 ? (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyStateTitle}>No attendance records</Text>

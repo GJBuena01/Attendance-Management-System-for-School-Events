@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { getEventAttendance, getEvents, getStudentAttendance } from '../api/events';
 import type { Account, AttendanceRecord, EventRecord, StudentAttendanceRecord, UserRole } from '../types/event';
 import { styles } from '../styles/HomeScreen.style';
@@ -152,6 +153,14 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
       </View>
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={19} color={styles.searchIcon.color} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search events"
+          placeholderTextColor={styles.searchPlaceholder.color}
+        />
+      </View>
       {role === 'student' ? (
         <TouchableOpacity
           style={styles.generateQrButton}
@@ -241,6 +250,14 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           >
             <Text style={styles.closeModalButtonText}>Close</Text>
           </TouchableOpacity>
+        </View>
+        <View style={styles.attendeeSearchBar}>
+          <Ionicons name="search-outline" size={19} color={styles.searchIcon.color} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="name or id"
+            placeholderTextColor={styles.searchPlaceholder.color}
+          />
         </View>
         {(() => {
           return selectedRecords.length === 0 ? (
