@@ -97,10 +97,10 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.line,
     padding: 14,
     marginBottom: 12,
   },
@@ -257,7 +257,7 @@ export const styles = StyleSheet.create({
     marginTop: 4,
   },
   closeModalButton: {
-    backgroundColor: '#1d4ed8',
+    backgroundColor: colors.maroon,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -283,13 +283,13 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   backToFormButtonText: {
-    color: '#1d4ed8',
+    color: colors.maroon,
     fontWeight: '700',
   },
   attendanceTable: {
     minWidth: 790,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: colors.line,
     borderRadius: 10,
     overflow: 'hidden',
     backgroundColor: '#ffffff',
@@ -297,7 +297,7 @@ export const styles = StyleSheet.create({
   attendanceTableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: colors.line,
   },
   attendanceTableHeader: {
     backgroundColor: '#F8EDEF',
