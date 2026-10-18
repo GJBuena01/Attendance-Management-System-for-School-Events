@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { getEventAttendance, getEvents, getStudentAttendance } from '../api/events';
 import type { Account, AttendanceRecord, EventRecord, StudentAttendanceRecord, UserRole } from '../types/event';
 import { styles } from '../styles/HomeScreen.style';
+import StudentQrModal from '../components/StudentQrModal';
 
 type HomeScreenProps = {
   role: UserRole;
@@ -18,10 +19,18 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isAttendeeListVisible, setIsAttendeeListVisible] = useState(false);
+  const [isQrVisible, setIsQrVisible] = useState(false);
 
   useEffect(() => {
     void refreshEvents();
   }, [account.studentId, role]);
+
+  const handleGenerateQR = () => {
+    if (!account.studentId) {
+      return;
+    }
+    setIsQrVisible(true);
+  };
 
   const refreshEvents = async () => {
     setIsLoading(true);
@@ -144,9 +153,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
       {role === 'student' ? (
         <TouchableOpacity
           style={styles.generateQrButton}
-          onPress={() => {
-            // Temporary action
-          }}
+          onPress={handleGenerateQR}
           accessibilityRole="button"
         >
           <Text style={styles.generateQrButtonText}>Generate QR</Text>
@@ -200,6 +207,13 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
       ) : renderEventList()}
       
     </ScrollView>
+
+    <StudentQrModal
+      visible={isQrVisible}
+      studentId={account.studentId}
+      onClose={() => setIsQrVisible(false)}
+    />
+
     <Modal
       visible={role === 'officer' && isAttendeeListVisible && selectedEvent !== null}
       animationType="slide"
