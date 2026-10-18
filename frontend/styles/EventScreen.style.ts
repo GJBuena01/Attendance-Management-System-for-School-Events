@@ -340,4 +340,24 @@ scanQrButtonText: {
   color: '#6F1023',
   fontWeight: '700',
 },
+
+scannerContainer: {
+  flex: 1,
+  backgroundColor: colors.maroon,
+},
+
+camera: {
+  flex: 1,
+},
+
+closeScannerButton: {
+  position: 'absolute',
+  left: 20,
+  right: 20,
+  bottom: 32,
+  alignItems: 'center',
+  backgroundColor: colors.danger,
+  borderRadius: radii.sm,
+  paddingVertical: 12,
+},
 });

@@ -16,6 +16,7 @@ import type {
   UserRole,
 } from '../types/event';
 import { styles } from '../styles/EventScreen.style';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 type EventScreenProps = {
   role: UserRole;
@@ -64,6 +65,9 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const [formError, setFormError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isScannerVisible, setIsScannerVisible] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   useEffect(() => {
     void loadEvents();
@@ -80,6 +84,20 @@ export default function EventScreen({ role, account }: EventScreenProps) {
 
     void loadStudentAttendance(account.studentId);
   }, [account?.studentId, role]);
+
+  const openScanner = async () => {
+  if (!cameraPermission?.granted) {
+    const permissionResult = await requestCameraPermission();
+
+    if (!permissionResult.granted) {
+      setFormError('Camera permission is required to scan QR codes.');
+      return;
+    }
+  }
+
+  setHasScanned(false);
+  setIsScannerVisible(true);
+  };
 
   const loadEvents = async () => {
     setIsLoading(true);
@@ -180,16 +198,17 @@ export default function EventScreen({ role, account }: EventScreenProps) {
     }
   };
 
-  const submitAttendance = async () => {
+  const submitAttendance = async (scannedStudentId?: string) => {
     if (!selectedEvent) return;
 
-    const studentId = form.studentId.trim();
-    const scannerName = account?.fullName.trim();
+  const studentId = (scannedStudentId ?? form.studentId).trim();
+  const scannerName = account?.fullName.trim();
+
     if (!studentId || !scannerName) {
-      setFormError('Enter a student ID while signed in as an officer.');
+      setFormError('A student ID and officer account are required.');
       setSuccessMessage('');
       return;
-    }
+  }
 
     try {
       const newRecord = await recordAttendance({
@@ -494,7 +513,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               <View style={styles.formPanel}>
                 <Text style={styles.formTitle}>Attendance entry</Text>
                 <Text style={styles.formDescription}>
-                  Enter the student ID as if it were read by the event scanner.
+                  Enter the student ID or use the QR scanner.
                 </Text>
                 <TextInput
                   style={styles.input}
@@ -516,17 +535,15 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                 ) : null}
                 <TouchableOpacity
                   style={styles.saveButton}
-                  onPress={submitAttendance}
-                  accessibilityRole="button"
-                >
+                  onPress={() => {
+                    void submitAttendance();
+                  }}
+                  accessibilityRole="button">
                   <Text style={styles.buttonText}>Record attendance</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.scanQrButton}
-                    onPress={() => {
-                      setFormError('QR scanning will be added next.');
-                      setSuccessMessage('');
-                    }}
+                    onPress={openScanner}
                     accessibilityRole="button"
                   >
                   <Text style={styles.scanQrButtonText}>Scan QR</Text>
@@ -535,6 +552,39 @@ export default function EventScreen({ role, account }: EventScreenProps) {
             </ScrollView>
           )}
         </View>
+      </Modal>
+      
+      <Modal
+        visible={isScannerVisible}
+        animationType="slide"
+        onRequestClose={() => setIsScannerVisible(false)}
+      >
+      <View style={styles.scannerContainer}>
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          barcodeScannerSettings={{
+            barcodeTypes: ['qr'],
+          }}
+          onBarcodeScanned={
+            hasScanned
+              ? undefined
+              : ({ data }) => {
+                  setHasScanned(true);
+                  setIsScannerVisible(false);
+                  setForm({ studentId: data });
+                  void submitAttendance(data);
+                }
+          }
+      />
+
+        <TouchableOpacity
+          style={styles.closeScannerButton}
+          onPress={() => setIsScannerVisible(false)}
+          accessibilityRole="button">
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
       </Modal>
     </>
   );
