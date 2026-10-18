@@ -26,7 +26,11 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-camera",
+        {
+          "cameraPermission": "Allow this app to scan student QR codes."
+        }
     ]
   }
 }
