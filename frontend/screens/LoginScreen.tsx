@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityIndicator, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LoginScreenStyles } from '../styles/LoginScreen.style';
@@ -42,42 +43,44 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={LoginScreenStyles.page} keyboardShouldPersistTaps="handled">
-      <View style={LoginScreenStyles.card}>
-        <View style={LoginScreenStyles.brandContainer}>
-          <BrandMark vertical />
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.maroonDark }}>
+      <ScrollView contentContainerStyle={LoginScreenStyles.page} keyboardShouldPersistTaps="handled">
+        <View style={LoginScreenStyles.card}>
+          <View style={LoginScreenStyles.brandContainer}>
+            <BrandMark vertical />
+          </View>
+
+          <Text style={LoginScreenStyles.label}>Email</Text>
+          <TextInput
+            style={LoginScreenStyles.input}
+            placeholder="Email, student, or officer name"
+            placeholderTextColor="#7f7f7f"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+
+          <Text style={LoginScreenStyles.label}>Password</Text>
+          <TextInput
+            style={LoginScreenStyles.input}
+            placeholder="Enter your password"
+            placeholderTextColor="#7f7f7f"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          {error ? <Text style={LoginScreenStyles.error}>{error}</Text> : null}
+
+          <TouchableOpacity style={LoginScreenStyles.primaryButton} onPress={handleLogin} disabled={isSubmitting}>
+            {isSubmitting ? <ActivityIndicator color={colors.surface} /> : <Text style={LoginScreenStyles.primaryButtonText}>Sign in</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity style={LoginScreenStyles.secondaryButton} onPress={() => navigation.navigate({ name: 'Signup' } as never)}>
+            <Text style={LoginScreenStyles.secondaryButtonText}>Create student account</Text>
+          </TouchableOpacity>
         </View>
-
-        <Text style={LoginScreenStyles.label}>Email</Text>
-        <TextInput
-          style={LoginScreenStyles.input}
-          placeholder="Email, student, or officer name"
-          placeholderTextColor="#7f7f7f"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <Text style={LoginScreenStyles.label}>Password</Text>
-        <TextInput
-          style={LoginScreenStyles.input}
-          placeholder="Enter your password"
-          placeholderTextColor="#7f7f7f"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {error ? <Text style={LoginScreenStyles.error}>{error}</Text> : null}
-
-        <TouchableOpacity style={LoginScreenStyles.primaryButton} onPress={handleLogin} disabled={isSubmitting}>
-          {isSubmitting ? <ActivityIndicator color={colors.surface} /> : <Text style={LoginScreenStyles.primaryButtonText}>Sign in</Text>}
-        </TouchableOpacity>
-        <TouchableOpacity style={LoginScreenStyles.secondaryButton} onPress={() => navigation.navigate({ name: 'Signup' } as never)}>
-          <Text style={LoginScreenStyles.secondaryButtonText}>Create student account</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

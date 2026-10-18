@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getEventAttendance, getEvents, getStudentAttendance } from '../api/events';
 import type { Account, AttendanceRecord, EventRecord, StudentAttendanceRecord, UserRole } from '../types/event';
 import { styles } from '../styles/HomeScreen.style';
@@ -140,6 +141,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
 
   return (
     <>
+    <SafeAreaView edges={['bottom']} style={styles.container}>
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
@@ -207,6 +209,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
       ) : renderEventList()}
       
     </ScrollView>
+    </SafeAreaView>
 
     <StudentQrModal
       visible={isQrVisible}
@@ -220,7 +223,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
       presentationStyle="pageSheet"
       onRequestClose={() => setIsAttendeeListVisible(false)}
     >
-      <View style={styles.attendanceModal}>
+      <SafeAreaView edges={['top', 'bottom']} style={styles.attendanceModal}>
         <View style={styles.attendanceModalHeader}>
           <View style={styles.attendanceModalTitleContainer}>
             <Text style={styles.attendanceModalTitle}>Event attendees</Text>
@@ -286,7 +289,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
             </ScrollView>
           );
         })()}
-      </View>
+      </SafeAreaView>
     </Modal>
     </>
   );

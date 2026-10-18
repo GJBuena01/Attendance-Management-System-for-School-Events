@@ -254,6 +254,7 @@ export const styles = StyleSheet.create({
     borderRadius: radii.sm,
     padding: 12,
     marginTop: 16,
+    marginBottom: 10,
   },
   generateQrButtonText: {
     color: colors.surface,

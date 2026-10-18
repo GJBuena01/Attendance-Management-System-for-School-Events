@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   createEvent,
   getEventAttendance,
@@ -232,6 +233,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
 
   return (
     <>
+      <SafeAreaView edges={['bottom']} style={styles.container}>
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.headerRow}>
         <View>
@@ -394,6 +396,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
         </View>
       ) : null}
       </ScrollView>
+      </SafeAreaView>
       <Modal
         visible={role === 'officer' && selectedEvent !== null}
         animationType="slide"
@@ -403,7 +406,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           setSelectedEvent(null);
         }}
       >
-        <View style={styles.attendanceModal}>
+        <SafeAreaView edges={['top', 'bottom']} style={styles.attendanceModal}>
           <View style={styles.attendanceModalHeader}>
             <View style={styles.attendanceModalTitleContainer}>
               <Text style={styles.attendanceModalTitle}>
@@ -551,7 +554,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               </View>
             </ScrollView>
           )}
-        </View>
+        </SafeAreaView>
       </Modal>
       
       <Modal
@@ -559,7 +562,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
         animationType="slide"
         onRequestClose={() => setIsScannerVisible(false)}
       >
-      <View style={styles.scannerContainer}>
+      <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.scannerContainer}>
         <CameraView
           style={styles.camera}
           facing="back"
@@ -584,7 +587,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           accessibilityRole="button">
           <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
       </Modal>
     </>
   );

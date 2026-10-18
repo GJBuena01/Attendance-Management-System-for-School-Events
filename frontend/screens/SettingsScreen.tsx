@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { styles } from '../styles/SettingsScreen.style';
 import BrandMark from '../components/BrandMark';
 import { colors } from '../styles/theme';
@@ -8,6 +9,7 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   return (
+    <SafeAreaView edges={['bottom']} style={styles.container}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <BrandMark />
       <Text style={styles.title}>Settings</Text>
@@ -32,5 +34,6 @@ export default function SettingsScreen() {
         <Text style={styles.cardText}>School Attendance keeps event check-ins clear, quick, and easy to review.</Text>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }

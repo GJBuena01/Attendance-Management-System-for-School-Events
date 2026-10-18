@@ -1,4 +1,5 @@
 import { Modal, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
 import type { Account } from '../types/event';
 import { styles } from '../styles/HomeScreen.style';
@@ -21,7 +22,10 @@ export default function StudentQrModal({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.qrModalOverlay}>
+      <SafeAreaView
+        edges={['top', 'right', 'bottom', 'left']}
+        style={styles.qrModalOverlay}
+      >
         <View style={styles.qrModalCard}>
           <Text style={styles.qrModalTitle}>Student QR</Text>
           <Text style={styles.qrModalSubtitle}>
@@ -54,7 +58,7 @@ export default function StudentQrModal({
             <Text style={styles.qrCloseButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
