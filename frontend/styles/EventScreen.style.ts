@@ -326,5 +326,38 @@ export const styles = StyleSheet.create({
   },
   attendanceTableScanner: {
     width: 195,
-  },
+  },scanQrButton: {
+  alignItems: 'center',
+  backgroundColor: '#FFFFFF',
+  borderWidth: 1,
+  borderColor: '#6F1023',
+  borderRadius: 8,
+  padding: 12,
+  marginTop: 10,
+},
+
+scanQrButtonText: {
+  color: '#6F1023',
+  fontWeight: '700',
+},
+
+scannerContainer: {
+  flex: 1,
+  backgroundColor: colors.maroon,
+},
+
+camera: {
+  flex: 1,
+},
+
+closeScannerButton: {
+  position: 'absolute',
+  left: 20,
+  right: 20,
+  bottom: 32,
+  alignItems: 'center',
+  backgroundColor: colors.danger,
+  borderRadius: radii.sm,
+  paddingVertical: 12,
+},
 });

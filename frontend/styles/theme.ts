@@ -9,6 +9,7 @@ export const colors = {
   canvas: '#FCFAF8',
   surface: '#FFFFFF',
   line: '#E9DFE1',
+  overlay: 'rgba(33, 27, 29, 0.55)',
   success: '#237A55',
   successSoft: '#E8F6EF',
   danger: '#A52836',
