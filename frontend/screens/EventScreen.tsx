@@ -356,35 +356,59 @@ export default function EventScreen({ role, account }: EventScreenProps) {
         <>
           <Text style={styles.sectionTitle}>Available events</Text>
           {events.map((event) => (
-            <TouchableOpacity
+            <View
               key={event.id}
               style={[
                 styles.recordCard,
                 selectedEvent?.id === event.id ? styles.selectedRecordCard : null,
               ]}
-              onPress={() => {
-                setSelectedEvent(event);
-                setForm(emptyForm);
-                setIsAttendanceListVisible(false);
-                setFormError('');
-                setSuccessMessage('');
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={`Select ${event.name}`}
             >
-              <View style={styles.recordInfo}>
-                <Text style={styles.recordEvent}>{event.name}</Text>
-                <Text style={styles.recordDate}>
-                  {event.startDate} - {event.endDate} | {event.location}
+              <TouchableOpacity
+                style={styles.recordCardMain}
+                onPress={() => {
+                  setSelectedEvent(event);
+                  setForm(emptyForm);
+                  setIsAttendanceListVisible(false);
+                  setFormError('');
+                  setSuccessMessage('');
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Select ${event.name}`}
+              >
+                <View style={styles.recordInfo}>
+                  <Text style={styles.recordEvent}>{event.name}</Text>
+                  <Text style={styles.recordDate}>
+                    {event.startDate} - {event.endDate} | {event.location}
+                  </Text>
+                  {event.description ? (
+                    <Text style={styles.recordDescription}>{event.description}</Text>
+                  ) : null}
+                </View>
+                <Text style={styles.selectEventText}>
+                  {selectedEvent?.id === event.id ? 'Selected' : 'Select'}
                 </Text>
-                {event.description ? (
-                  <Text style={styles.recordDescription}>{event.description}</Text>
-                ) : null}
-              </View>
-              <Text style={styles.selectEventText}>
-                {selectedEvent?.id === event.id ? 'Selected' : 'Select'}
-              </Text>
-            </TouchableOpacity>
+              </TouchableOpacity>
+              {role === 'officer' ? (
+                <View style={styles.eventCardActions}>
+                  <TouchableOpacity
+                    style={styles.eventActionButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Refresh ${event.name}`}
+                  >
+                    <Ionicons name="refresh-outline" size={16} color={styles.eventActionIcon.color} />
+                    <Text style={styles.eventActionText}>Refresh</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteEventButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Delete ${event.name}`}
+                  >
+                    <Ionicons name="trash-outline" size={16} color={styles.deleteEventText.color} />
+                    <Text style={styles.deleteEventText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </View>
           ))}
         </>
       )}
@@ -456,6 +480,12 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   placeholder="name or id"
                   placeholderTextColor={styles.searchPlaceholder.color}
                 />
+              </View>
+              <View style={styles.attendeeTableActions}>
+                <TouchableOpacity style={styles.editAttendeesButton} accessibilityRole="button">
+                  <Ionicons name="create-outline" size={17} color={styles.editAttendeesText.color} />
+                  <Text style={styles.editAttendeesText}>Edit attendees</Text>
+                </TouchableOpacity>
               </View>
               {selectedRecords.length === 0 ? (
                 <View style={styles.emptyState}>

@@ -109,31 +109,52 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           const attended = studentRecords.some((record) => record.eventId === event.id);
 
           return (
-            <TouchableOpacity
-              key={event.id}
-              style={styles.recordCard}
-              onPress={() => void selectEvent(event)}
-              accessibilityRole="button"
-              accessibilityLabel={`View ${role === 'officer' ? 'details' : 'attendance details'} for ${event.name}`}
-            >
-              <View style={styles.recordMain}>
-                <Text style={styles.recordEvent}>{event.name}</Text>
-                <Text style={styles.recordDate}>
-                  {event.startDate} - {event.endDate} | {event.location}
-                </Text>
-              </View>
-              {role === 'student' ? (
-                <View style={[styles.statusBadge, attended ? styles.presentBadge : styles.absentBadge]}>
-                  <Text style={[styles.statusText, attended ? styles.presentText : styles.absentText]}>
-                    {attended ? 'Present' : 'Not attended'}
+            <View key={event.id} style={styles.recordCard}>
+              <TouchableOpacity
+                style={styles.recordCardMain}
+                onPress={() => void selectEvent(event)}
+                accessibilityRole="button"
+                accessibilityLabel={`View ${role === 'officer' ? 'details' : 'attendance details'} for ${event.name}`}
+              >
+                <View style={styles.recordMain}>
+                  <Text style={styles.recordEvent}>{event.name}</Text>
+                  <Text style={styles.recordDate}>
+                    {event.startDate} - {event.endDate} | {event.location}
                   </Text>
                 </View>
-              ) : (
-                <Text style={styles.detailText}>
-                  {attendeeCounts[event.id] ?? 0} attendee{attendeeCounts[event.id] === 1 ? '' : 's'}
-                </Text>
-              )}
-            </TouchableOpacity>
+                {role === 'student' ? (
+                  <View style={[styles.statusBadge, attended ? styles.presentBadge : styles.absentBadge]}>
+                    <Text style={[styles.statusText, attended ? styles.presentText : styles.absentText]}>
+                      {attended ? 'Present' : 'Not attended'}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.detailText}>
+                    {attendeeCounts[event.id] ?? 0} attendee{attendeeCounts[event.id] === 1 ? '' : 's'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              {role === 'officer' ? (
+                <View style={styles.eventCardActions}>
+                  <TouchableOpacity
+                    style={styles.eventActionButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Refresh ${event.name}`}
+                  >
+                    <Ionicons name="refresh-outline" size={16} color={styles.eventActionIcon.color} />
+                    <Text style={styles.eventActionText}>Refresh</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteEventButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Delete ${event.name}`}
+                  >
+                    <Ionicons name="trash-outline" size={16} color={styles.deleteEventText.color} />
+                    <Text style={styles.deleteEventText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </View>
           );
         })
       )}
@@ -259,51 +280,65 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
             placeholderTextColor={styles.searchPlaceholder.color}
           />
         </View>
+        <View style={styles.attendeeTableActions}>
+          <TouchableOpacity style={styles.editAttendeesButton} accessibilityRole="button">
+            <Ionicons name="create-outline" size={17} color={styles.editAttendeesText.color} />
+            <Text style={styles.editAttendeesText}>Edit attendees</Text>
+          </TouchableOpacity>
+        </View>
         {(() => {
-          return selectedRecords.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateTitle}>No attendees yet</Text>
-              <Text style={styles.emptyStateText}>Attendance records for this event will appear here.</Text>
-            </View>
-          ) : (
-            <ScrollView style={styles.attendanceTableVerticalScroll}>
-              <ScrollView horizontal showsHorizontalScrollIndicator>
-                <View style={styles.attendanceTable}>
-                  <View style={[styles.attendanceTableRow, styles.attendanceTableHeader]}>
-                    <Text style={[styles.attendanceTableCell, styles.attendanceTableStudentId]}>Student ID</Text>
-                    <Text style={[styles.attendanceTableCell, styles.attendanceTableName]}>Student name</Text>
-                    <Text style={[styles.attendanceTableCell, styles.attendanceTableStatus]}>Status</Text>
-                    <Text style={[styles.attendanceTableCell, styles.attendanceTableTimestamp]}>Timestamp</Text>
-                    <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>Scanned by</Text>
-                  </View>
-                  {selectedRecords.map((record, index) => (
-                    <View
-                      key={record.id}
-                      style={[
-                        styles.attendanceTableRow,
-                        index % 2 === 1 ? styles.attendanceTableAlternateRow : null,
-                      ]}
-                    >
-                      <Text style={[styles.attendanceTableCell, styles.attendanceTableStudentId]}>
-                        {record.studentId}
-                      </Text>
-                      <Text style={[styles.attendanceTableCell, styles.attendanceTableName]}>
-                        {record.fullName}
-                      </Text>
-                      <Text style={[styles.attendanceTableCell, styles.attendanceTableStatus]}>
-                        {record.status}
-                      </Text>
-                      <Text style={[styles.attendanceTableCell, styles.attendanceTableTimestamp]}>
-                        {record.scannedAt}
-                      </Text>
-                      <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>
-                        {record.scannedBy}
-                      </Text>
+          if (selectedRecords.length === 0) {
+            return (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateTitle}>No attendees yet</Text>
+                <Text style={styles.emptyStateText}>
+                  Attendance records for this event will appear here.
+                </Text>
+              </View>
+            );
+          }
+
+          return (
+            <>
+              <ScrollView style={styles.attendanceTableVerticalScroll}>
+                <ScrollView horizontal showsHorizontalScrollIndicator>
+                  <View style={styles.attendanceTable}>
+                    <View style={[styles.attendanceTableRow, styles.attendanceTableHeader]}>
+                      <Text style={[styles.attendanceTableCell, styles.attendanceTableStudentId]}>Student ID</Text>
+                      <Text style={[styles.attendanceTableCell, styles.attendanceTableName]}>Student name</Text>
+                      <Text style={[styles.attendanceTableCell, styles.attendanceTableStatus]}>Status</Text>
+                      <Text style={[styles.attendanceTableCell, styles.attendanceTableTimestamp]}>Timestamp</Text>
+                      <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>Scanned by</Text>
                     </View>
-                  ))}
-                </View>
+                    {selectedRecords.map((record, index) => (
+                      <View
+                        key={record.id}
+                        style={[
+                          styles.attendanceTableRow,
+                          index % 2 === 1 ? styles.attendanceTableAlternateRow : null,
+                        ]}
+                      >
+                        <Text style={[styles.attendanceTableCell, styles.attendanceTableStudentId]}>
+                          {record.studentId}
+                        </Text>
+                        <Text style={[styles.attendanceTableCell, styles.attendanceTableName]}>
+                          {record.fullName}
+                        </Text>
+                        <Text style={[styles.attendanceTableCell, styles.attendanceTableStatus]}>
+                          {record.status}
+                        </Text>
+                        <Text style={[styles.attendanceTableCell, styles.attendanceTableTimestamp]}>
+                          {record.scannedAt}
+                        </Text>
+                        <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>
+                          {record.scannedBy}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
               </ScrollView>
-            </ScrollView>
+            </>
           );
         })()}
       </SafeAreaView>
