@@ -210,7 +210,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
 
     <StudentQrModal
       visible={isQrVisible}
-      studentId={account.studentId}
+      account={account}
       onClose={() => setIsQrVisible(false)}
     />
 
