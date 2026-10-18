@@ -141,7 +141,17 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
       </View>
-
+      {role === 'student' ? (
+        <TouchableOpacity
+          style={styles.generateQrButton}
+          onPress={() => {
+            // Temporary action
+          }}
+          accessibilityRole="button"
+        >
+          <Text style={styles.generateQrButtonText}>Generate QR</Text>
+        </TouchableOpacity>
+      ) : null}
       {selectedEvent ? (
         <View style={styles.sectionPanel}>
           <TouchableOpacity
@@ -188,17 +198,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           )}
         </View>
       ) : renderEventList()}
-      {role === 'student' ? (
-        <TouchableOpacity
-          style={styles.generateQrButton}
-          onPress={() => {
-            // Temporary action
-          }}
-          accessibilityRole="button"
-        >
-          <Text style={styles.generateQrButtonText}>Generate QR</Text>
-        </TouchableOpacity>
-      ) : null}
+      
     </ScrollView>
     <Modal
       visible={role === 'officer' && isAttendeeListVisible && selectedEvent !== null}
