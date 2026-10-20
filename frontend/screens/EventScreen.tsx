@@ -73,6 +73,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [eventToArchive, setEventToArchive] = useState<EventRecord | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [attendeeSearchQuery, setAttendeeSearchQuery] = useState('');
 
   useEffect(() => {
     void loadEvents();
@@ -265,6 +266,12 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const selectedRecords = selectedEvent
     ? records.filter((record) => record.eventId === selectedEvent.id)
     : [];
+  const normalizedAttendeeSearchQuery = attendeeSearchQuery.trim().toLowerCase();
+  const filteredAttendees = selectedRecords.filter((record) =>
+    [record.fullName, record.studentId].some((value) =>
+      value.toLowerCase().includes(normalizedAttendeeSearchQuery),
+    ),
+  );
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredEvents = events.filter((event) => {
     if (!normalizedSearchQuery) {
@@ -425,6 +432,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                 onPress={() => {
                   setSelectedEvent(event);
                   setForm(emptyForm);
+                  setAttendeeSearchQuery('');
                   setIsAttendanceListVisible(false);
                   setFormError('');
                   setSuccessMessage('');
@@ -535,7 +543,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               </Text>
               <Text style={styles.attendanceModalSubtitle}>
                 {isAttendanceListVisible
-                  ? `${selectedRecords.length} attendee${selectedRecords.length === 1 ? '' : 's'}`
+                ? `${filteredAttendees.length} attendee${filteredAttendees.length === 1 ? '' : 's'}`
                   : `${selectedEvent?.startDate} - ${selectedEvent?.endDate} · ${selectedEvent?.location}`}
               </Text>
             </View>
@@ -578,6 +586,9 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   style={styles.searchInput}
                   placeholder="name or id"
                   placeholderTextColor={styles.searchPlaceholder.color}
+                  value={attendeeSearchQuery}
+                  onChangeText={setAttendeeSearchQuery}
+                  autoCorrect={false}
                 />
               </View>
               <View style={styles.attendeeTableActions}>
@@ -592,6 +603,11 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   <Text style={styles.emptyStateText}>
                     Submit the attendance form for this event to add the first attendee.
                   </Text>
+                </View>
+              ) : filteredAttendees.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateTitle}>No matching attendees</Text>
+                  <Text style={styles.emptyStateText}>Try a different name or student ID.</Text>
                 </View>
               ) : (
                 <ScrollView style={styles.attendanceTableVerticalScroll}>
@@ -614,7 +630,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                           Scanned by
                         </Text>
                       </View>
-                      {selectedRecords.map((record, index) => (
+                      {filteredAttendees.map((record, index) => (
                         <View
                           key={record.id}
                           style={[

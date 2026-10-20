@@ -23,6 +23,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
   const [isAttendeeListVisible, setIsAttendeeListVisible] = useState(false);
   const [isQrVisible, setIsQrVisible] = useState(false);
   const [eventToArchive, setEventToArchive] = useState<EventRecord | null>(null);
+  const [attendeeSearchQuery, setAttendeeSearchQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -102,6 +103,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
 
   const selectEvent = async (event: EventRecord) => {
     setSelectedEvent(event);
+    setAttendeeSearchQuery('');
     setIsAttendeeListVisible(false);
 
     if (role === 'officer') {
@@ -117,6 +119,12 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
   const selectedRecords = records.filter((record) => record.eventId === selectedEvent?.id);
   const selectedStudentRecord = studentRecords.find(
     (record) => record.eventId === selectedEvent?.id,
+  );
+  const normalizedAttendeeSearchQuery = attendeeSearchQuery.trim().toLowerCase();
+  const filteredAttendees = selectedRecords.filter((record) =>
+    [record.fullName, record.studentId].some((value) =>
+      value.toLowerCase().includes(normalizedAttendeeSearchQuery),
+    ),
   );
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredEvents = events.filter((event) => {
@@ -370,8 +378,8 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
             <Text style={styles.attendanceModalTitle}>Event attendees</Text>
             <Text style={styles.attendanceModalSubtitle}>
               {selectedEvent?.name} · {
-                selectedRecords.length
-              } attendee{selectedRecords.length === 1 ? '' : 's'}
+                filteredAttendees.length
+              } attendee{filteredAttendees.length === 1 ? '' : 's'}
             </Text>
           </View>
           <TouchableOpacity
@@ -389,6 +397,9 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
             style={styles.searchInput}
             placeholder="name or id"
             placeholderTextColor={styles.searchPlaceholder.color}
+            value={attendeeSearchQuery}
+            onChangeText={setAttendeeSearchQuery}
+            autoCorrect={false}
           />
         </View>
         <View style={styles.attendeeTableActions}>
@@ -409,6 +420,15 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
             );
           }
 
+          if (filteredAttendees.length === 0) {
+            return (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateTitle}>No matching attendees</Text>
+                <Text style={styles.emptyStateText}>Try a different name or student ID.</Text>
+              </View>
+            );
+          }
+
           return (
             <>
               <ScrollView style={styles.attendanceTableVerticalScroll}>
@@ -421,7 +441,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
                       <Text style={[styles.attendanceTableCell, styles.attendanceTableTimestamp]}>Timestamp</Text>
                       <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>Scanned by</Text>
                     </View>
-                    {selectedRecords.map((record, index) => (
+                    {filteredAttendees.map((record, index) => (
                       <View
                         key={record.id}
                         style={[
