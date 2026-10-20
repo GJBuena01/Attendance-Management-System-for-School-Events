@@ -58,17 +58,31 @@ export const signInWithGoogle = async (input: unknown): Promise<StudentResponse>
 	const studentId = getStudentIdFromEmail(identity.email) ?? existingStudent?.studentId ?? officer?.studentId ?? createStudentId();
 
 	if (officer) {
-		if (officer.studentId !== studentId) {
-			authRepository.assignOfficerStudentId(officer.id, studentId);
+		try {
+			if (officer.studentId !== studentId) {
+				authRepository.assignOfficerStudentId(officer.id, studentId);
+			}
+			const student = authRepository.upsertStudent({
+				studentId,
+				givenName: name.givenName,
+				lastName: name.lastName,
+				fullName: name.fullName,
+				email: identity.email,
+				googleSubject: identity.subject,
+				createdAt: new Date().toISOString(),
+			});
+
+			return {
+				role: "officer",
+				studentId: student.studentId,
+				givenName: student.givenName,
+				lastName: student.lastName,
+				fullName: student.fullName,
+				email: student.email,
+			};
+		} catch (error) {
+			throw new ServiceError(500, "Failed to create officer account", error);
 		}
-		return {
-			role: "officer",
-			studentId,
-			givenName: name.givenName,
-			lastName: name.lastName,
-			fullName: name.fullName,
-			email: identity.email,
-		};
 	}
 
 	try {

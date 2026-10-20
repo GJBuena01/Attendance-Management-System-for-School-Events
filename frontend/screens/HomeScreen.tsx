@@ -309,13 +309,13 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           autoCorrect={false}
         />
       </View>
-      {role === 'student' ? (
+      {account.studentId ? (
         <TouchableOpacity
           style={styles.generateQrButton}
           onPress={handleGenerateQR}
           accessibilityRole="button"
         >
-          <Text style={styles.generateQrButtonText}>Generate QR</Text>
+          <Text style={styles.generateQrButtonText}>Generate my QR</Text>
         </TouchableOpacity>
       ) : null}
       {selectedEvent ? (
