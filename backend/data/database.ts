@@ -28,7 +28,10 @@ database.exec(`
 		location TEXT NOT NULL,
 		created_at TEXT NOT NULL,
 		has_am_attendance INTEGER NOT NULL DEFAULT 0,
-		has_pm_attendance INTEGER NOT NULL DEFAULT 0
+		has_pm_attendance INTEGER NOT NULL DEFAULT 0,
+		status TEXT NOT NULL DEFAULT 'starting_soon',
+		archived_at TEXT,
+		archived_by TEXT
 	);
 
 	CREATE TABLE IF NOT EXISTS attendances (
@@ -92,4 +95,22 @@ if (unnormalizedDateCount > 0) {
 	console.warn(
 		`Could not normalize event dates for ${unnormalizedDateCount} legacy event(s); their stored values were preserved.`,
 	);
+}
+
+const eventColumnsInfo = new Set(
+	(database.prepare("PRAGMA table_info(events)").all() as Array<{ name: string }>).map(
+		(column) => column.name,
+	),
+);
+
+if (!eventColumnsInfo.has("status")) {
+	database.exec("ALTER TABLE events ADD COLUMN status TEXT NOT NULL DEFAULT 'starting_soon'");
+}
+
+if (!eventColumnsInfo.has("archived_at")) {
+	database.exec("ALTER TABLE events ADD COLUMN archived_at TEXT");
+}
+
+if (!eventColumnsInfo.has("archived_by")) {
+	database.exec("ALTER TABLE events ADD COLUMN archived_by TEXT");
 }

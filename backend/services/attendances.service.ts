@@ -78,3 +78,24 @@ export const listStudentAttendance = (studentId: string) => {
 		throw new ServiceError(500, "Failed to retrieve student attendance", error);
 	}
 };
+
+export const deleteAttendance = (attendanceIdInput: string) => {
+	const attendanceId = Number(attendanceIdInput);
+	if (!Number.isSafeInteger(attendanceId) || attendanceId <= 0) {
+		throw new ServiceError(400, "attendanceId must be a positive integer");
+	}
+
+	try {
+		if (!attendancesRepository.attendanceExists(attendanceId)) {
+			throw new ServiceError(404, "Attendance record not found");
+		}
+
+		attendancesRepository.deleteAttendance(attendanceId);
+		return { deleted: true, attendanceId };
+	} catch (error) {
+		if (error instanceof ServiceError) {
+			throw error;
+		}
+		throw new ServiceError(500, "Failed to delete attendance record", error);
+	}
+};

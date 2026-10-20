@@ -56,11 +56,39 @@ export const createEvent = (input: unknown) => {
 	}
 };
 
-export const listEvents = (currentOnly: boolean) => {
+export const listEvents = (currentOnly: boolean, archived: boolean) => {
 	try {
-		return eventsRepository.listEvents(new Date().toISOString(), currentOnly);
+		return eventsRepository.listEvents(new Date().toISOString(), currentOnly, archived);
 	} catch (error) {
 		throw new ServiceError(500, "Failed to retrieve events", error);
+	}
+};
+
+export const archiveEvent = (eventIdInput: string, archivedByInput: unknown) => {
+	const eventId = Number(eventIdInput);
+	if (!Number.isSafeInteger(eventId) || eventId <= 0) {
+		throw new ServiceError(400, "eventId must be a positive integer");
+	}
+
+	if (typeof archivedByInput !== "string" || !archivedByInput.trim()) {
+		throw new ServiceError(400, "archivedBy is required");
+	}
+
+	try {
+		if (!eventsRepository.eventExists(eventId)) {
+			throw new ServiceError(404, "Event not found");
+		}
+
+		const event = eventsRepository.archiveEvent(eventId, archivedByInput.trim());
+		if (!event) {
+			throw new ServiceError(409, "Event is already archived");
+		}
+		return event;
+	} catch (error) {
+		if (error instanceof ServiceError) {
+			throw error;
+		}
+		throw new ServiceError(500, "Failed to archive event", error);
 	}
 };
 

@@ -9,6 +9,7 @@ import BrandMark from '../components/BrandMark';
 import HomeScreen from '../screens/HomeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EventScreen from '../screens/EventScreen';
+import EventArchivesScreen from '../screens/EventArchivesScreen';
 import type { Account, UserRole } from '../types/event';
 
 const Drawer = createDrawerNavigator();
@@ -96,6 +97,18 @@ export default function DrawerNavigation({ route }: DrawerNavigationProps) {
           ),
         }}
       />
+
+      {role === 'officer' ? (
+        <Drawer.Screen
+          name="Event Archives"
+          children={() => <EventArchivesScreen account={account} />}
+          options={{
+            drawerIcon: ({ color, size }) => (
+              <Ionicons name="archive-outline" size={size} color={color} />
+            ),
+          }}
+        />
+      ) : null}
 
       <Drawer.Screen
         name="Settings"
