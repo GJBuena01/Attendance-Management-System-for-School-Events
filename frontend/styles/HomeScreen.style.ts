@@ -217,10 +217,17 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 12,
   },
-  backText: {
-    color: colors.maroon,
-    fontWeight: '800',
+  backButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.maroon,
+    borderRadius: radii.sm,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
     marginBottom: 16,
+  },
+  backButtonText: {
+    color: colors.yellow,
+    fontWeight: '800',
   },
   detailText: {
     color: colors.muted,

@@ -101,12 +101,21 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   setIsScannerVisible(true);
   };
 
-  const loadEvents = async () => {
+  const loadEvents = async (preserveSelection = false) => {
+    const selectedEventId = selectedEvent?.id;
     setIsLoading(true);
     setHasError(false);
-    setSelectedEvent(null);
+    if (!preserveSelection) {
+      setSelectedEvent(null);
+    }
     try {
-      setEvents(await getEvents());
+      const loadedEvents = await getEvents();
+      setEvents(loadedEvents);
+      if (preserveSelection && selectedEventId !== undefined) {
+        setSelectedEvent(
+          loadedEvents.find((event) => event.id === selectedEventId) ?? null,
+        );
+      }
     } catch {
       setHasError(true);
     } finally {
@@ -116,6 +125,13 @@ export default function EventScreen({ role, account }: EventScreenProps) {
 
   const refreshEvents = () => {
     void loadEvents();
+  };
+
+  const refreshSelectedEvent = () => {
+    void loadEvents(true);
+    if (role === 'student' && account?.studentId) {
+      void loadStudentAttendance(account.studentId);
+    }
   };
 
   const loadAttendance = async (eventId: number) => {
@@ -388,24 +404,27 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   {selectedEvent?.id === event.id ? 'Selected' : 'Select'}
                 </Text>
               </TouchableOpacity>
-              {role === 'officer' ? (
+              {selectedEvent?.id === event.id ? (
                 <View style={styles.eventCardActions}>
                   <TouchableOpacity
                     style={styles.eventActionButton}
+                    onPress={refreshSelectedEvent}
                     accessibilityRole="button"
                     accessibilityLabel={`Refresh ${event.name}`}
                   >
                     <Ionicons name="refresh-outline" size={16} color={styles.eventActionIcon.color} />
                     <Text style={styles.eventActionText}>Refresh</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.deleteEventButton}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Delete ${event.name}`}
-                  >
-                    <Ionicons name="trash-outline" size={16} color={styles.deleteEventText.color} />
-                    <Text style={styles.deleteEventText}>Delete</Text>
-                  </TouchableOpacity>
+                  {role === 'officer' ? (
+                    <TouchableOpacity
+                      style={styles.deleteEventButton}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete ${event.name}`}
+                    >
+                      <Ionicons name="trash-outline" size={16} color={styles.deleteEventText.color} />
+                      <Text style={styles.deleteEventText}>Delete</Text>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
               ) : null}
             </View>

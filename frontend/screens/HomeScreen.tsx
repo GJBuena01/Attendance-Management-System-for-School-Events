@@ -34,15 +34,23 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
     setIsQrVisible(true);
   };
 
-  const refreshEvents = async () => {
+  const refreshEvents = async (preserveSelection = false) => {
+    const selectedEventId = selectedEvent?.id;
     setIsLoading(true);
     setHasError(false);
-    setSelectedEvent(null);
+    if (!preserveSelection) {
+      setSelectedEvent(null);
+    }
     setIsAttendeeListVisible(false);
 
     try {
       const loadedEvents = await getEvents();
       setEvents(loadedEvents);
+      if (preserveSelection && selectedEventId !== undefined) {
+        setSelectedEvent(
+          loadedEvents.find((event) => event.id === selectedEventId) ?? null,
+        );
+      }
 
       if (role === 'officer') {
         const attendanceLists = await Promise.all(
@@ -53,6 +61,11 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
             loadedEvents.map((event, index) => [event.id, attendanceLists[index].length]),
           ),
         );
+        if (selectedEventId !== undefined) {
+          setRecords(
+            attendanceLists[loadedEvents.findIndex((event) => event.id === selectedEventId)] ?? [],
+          );
+        }
       } else if (account.studentId) {
         setStudentRecords(await getStudentAttendance(account.studentId));
       }
@@ -64,6 +77,10 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const refreshSelectedEvent = () => {
+    void refreshEvents(true);
   };
 
   const selectEvent = async (event: EventRecord) => {
@@ -95,7 +112,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateTitle}>Could not load events</Text>
           <Text style={styles.emptyStateText}>The event service is unavailable.</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={refreshEvents}>
+          <TouchableOpacity style={styles.retryButton} onPress={() => void refreshEvents()}>
             <Text style={styles.refreshText}>Try again</Text>
           </TouchableOpacity>
         </View>
@@ -134,24 +151,27 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
                   </Text>
                 )}
               </TouchableOpacity>
-              {role === 'officer' ? (
+              {selectedEvent?.id === event.id ? (
                 <View style={styles.eventCardActions}>
                   <TouchableOpacity
                     style={styles.eventActionButton}
+                    onPress={refreshSelectedEvent}
                     accessibilityRole="button"
                     accessibilityLabel={`Refresh ${event.name}`}
                   >
                     <Ionicons name="refresh-outline" size={16} color={styles.eventActionIcon.color} />
                     <Text style={styles.eventActionText}>Refresh</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.deleteEventButton}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Delete ${event.name}`}
-                  >
-                    <Ionicons name="trash-outline" size={16} color={styles.deleteEventText.color} />
-                    <Text style={styles.deleteEventText}>Delete</Text>
-                  </TouchableOpacity>
+                  {role === 'officer' ? (
+                    <TouchableOpacity
+                      style={styles.deleteEventButton}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete ${event.name}`}
+                    >
+                      <Ionicons name="trash-outline" size={16} color={styles.deleteEventText.color} />
+                      <Text style={styles.deleteEventText}>Delete</Text>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
               ) : null}
             </View>
@@ -170,7 +190,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           <Text style={styles.title}>School events</Text>
           <Text style={styles.subtitle}>Your event attendance</Text>
         </View>
-        <TouchableOpacity style={styles.refreshButton} onPress={refreshEvents}>
+        <TouchableOpacity style={styles.refreshButton} onPress={() => void refreshEvents()}>
           <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
       </View>
@@ -194,13 +214,14 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
       {selectedEvent ? (
         <View style={styles.sectionPanel}>
           <TouchableOpacity
+            style={styles.backButton}
             onPress={() => {
               setSelectedEvent(null);
               setIsAttendeeListVisible(false);
             }}
             accessibilityRole="button"
           >
-            <Text style={styles.backText}>‹  All events</Text>
+            <Text style={styles.backButtonText}>‹  All events</Text>
           </TouchableOpacity>
           <Text style={styles.sectionTitle}>{selectedEvent.name}</Text>
           <Text style={styles.detailText}>
@@ -208,6 +229,17 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           </Text>
           <Text style={styles.detailText}>{selectedEvent.location}</Text>
           <Text style={styles.detailDescription}>{selectedEvent.description}</Text>
+          <View style={styles.eventCardActions}>
+            <TouchableOpacity
+              style={styles.eventActionButton}
+              onPress={refreshSelectedEvent}
+              accessibilityRole="button"
+              accessibilityLabel={`Refresh ${selectedEvent.name}`}
+            >
+              <Ionicons name="refresh-outline" size={16} color={styles.eventActionIcon.color} />
+              <Text style={styles.eventActionText}>Refresh</Text>
+            </TouchableOpacity>
+          </View>
 
           {role === 'officer' ? (
             <TouchableOpacity
