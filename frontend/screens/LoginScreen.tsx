@@ -1,67 +1,86 @@
 import { useState } from 'react';
-import { Text, View, TextInput, Button } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LoginScreenStyles } from '../styles/LoginScreen.style';
-import { globalStyles } from '../styles/GlobalStyles.style';
-import type { UserRole } from '../types/event';
+import { loginStudent } from '../api/auth';
+import BrandMark from '../components/BrandMark';
+import { colors } from '../styles/theme';
+
+const officerNames = ['Sinampaga', 'Bardago', 'Israel', 'Torculas', 'Cabal'];
 
 export default function LoginScreen() {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = () => {
-    const role: UserRole | null =
-      email.trim() === 'student' && password === 'student'
-        ? 'student'
-        : email.trim() === 'officer' && password === 'officer'
-          ? 'officer'
-          : null;
+  const handleLogin = async () => {
+    setIsSubmitting(true);
+    setError('');
 
-    if (!role) {
-      setError('Use student/student or officer/officer.');
+    const loginName = email.trim();
+    const officerName =
+      loginName.toLowerCase() === 'officer'
+        ? 'Officer'
+        : officerNames.find((name) => name.toLowerCase() === loginName.toLowerCase());
+
+    if (officerName && password === 'officer') {
+      navigation.navigate({ name: 'Main', params: { role: 'officer', fullName: officerName } } as never);
+      setIsSubmitting(false);
       return;
     }
 
-    setError('');
-    navigation.navigate({ name: 'Main', params: { role } } as never);
+    try {
+      const account = await loginStudent({ email: email.trim(), password });
+      navigation.navigate({ name: 'Main', params: account } as never);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Could not log in.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <View style={[globalStyles.screen, LoginScreenStyles.page]}>
-      <View style={LoginScreenStyles.card}>
-        <Text style={LoginScreenStyles.loginHeader}>Login</Text>
-        <Text style={LoginScreenStyles.subtitle}>School Event Attendance</Text>
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.maroonDark }}>
+      <ScrollView contentContainerStyle={LoginScreenStyles.page} keyboardShouldPersistTaps="handled">
+        <View style={LoginScreenStyles.card}>
+          <View style={LoginScreenStyles.brandContainer}>
+            <BrandMark vertical />
+          </View>
 
-        <Text style={LoginScreenStyles.label}>Name</Text>
-        <TextInput
-          style={LoginScreenStyles.input}
-          placeholder="Enter your name"
-          placeholderTextColor="#7f7f7f"
-          value={email}
-          onChangeText={setEmail}
-        />
-
-        <Text style={LoginScreenStyles.label}>Password</Text>
-        <TextInput
-          style={LoginScreenStyles.input}
-          placeholder="Enter your password"
-          placeholderTextColor="#7f7f7f"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {error ? <Text style={LoginScreenStyles.error}>{error}</Text> : null}
-
-        <View style={LoginScreenStyles.buttonWrapper}>
-          <Button
-            title="Login"
-            onPress={handleLogin}
+          <Text style={LoginScreenStyles.label}>Email</Text>
+          <TextInput
+            style={LoginScreenStyles.input}
+            placeholder="Email, student, or officer name"
+            placeholderTextColor="#7f7f7f"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
           />
+
+          <Text style={LoginScreenStyles.label}>Password</Text>
+          <TextInput
+            style={LoginScreenStyles.input}
+            placeholder="Enter your password"
+            placeholderTextColor="#7f7f7f"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          {error ? <Text style={LoginScreenStyles.error}>{error}</Text> : null}
+
+          <TouchableOpacity style={LoginScreenStyles.primaryButton} onPress={handleLogin} disabled={isSubmitting}>
+            {isSubmitting ? <ActivityIndicator color={colors.surface} /> : <Text style={LoginScreenStyles.primaryButtonText}>Sign in</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity style={LoginScreenStyles.secondaryButton} onPress={() => navigation.navigate({ name: 'Signup' } as never)}>
+            <Text style={LoginScreenStyles.secondaryButtonText}>Create student account</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
