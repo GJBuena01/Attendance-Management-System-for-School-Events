@@ -1,6 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCallback, useEffect, useState } from 'react';
-import { Text, View, ScrollView } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { getEvents } from '../api/events';
 import type { Account, EventRecord } from '../types/event';
 import { colors, radii } from '../styles/theme';
@@ -26,15 +27,25 @@ export default function EventArchivesScreen({ account }: EventArchivesScreenProp
     }
   }, []);
 
-  useEffect(() => {
-    void loadArchivedEvents();
-  }, [loadArchivedEvents]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadArchivedEvents();
+    }, [loadArchivedEvents]),
+  );
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Text style={styles.title}>Event archives</Text>
         <Text style={styles.subtitle}>Events manually archived by officers</Text>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={() => void loadArchivedEvents()}
+          accessibilityRole="button"
+          accessibilityLabel="Refresh archived events"
+        >
+          <Text style={styles.refreshButtonText}>Refresh</Text>
+        </TouchableOpacity>
         {isLoading ? <Text style={styles.message}>Loading archived events...</Text> : null}
         {hasError ? <Text style={styles.error}>Could not load archived events.</Text> : null}
         {!isLoading && !hasError && events.length === 0 ? (
@@ -73,6 +84,15 @@ const styles = {
   contentContainer: { padding: 20, paddingBottom: 32 },
   title: { fontSize: 28, fontWeight: '800' as const, color: colors.ink, marginBottom: 5 },
   subtitle: { fontSize: 14, color: colors.muted, marginBottom: 20 },
+  refreshButton: {
+    alignSelf: 'flex-start' as const,
+    backgroundColor: colors.maroon,
+    borderRadius: radii.sm,
+    marginBottom: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  refreshButtonText: { color: colors.yellow, fontWeight: '800' as const },
   message: { color: colors.muted, fontSize: 14, marginTop: 12 },
   error: { color: colors.danger, fontSize: 14, marginTop: 12 },
   card: {
