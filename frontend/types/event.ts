@@ -7,8 +7,6 @@ export type EventRecord = {
   startDate: string;
   endDate: string;
   location: string;
-  hasAmAttendance: boolean;
-  hasPmAttendance: boolean;
   createdAt: string;
   status: 'starting_soon' | 'ongoing' | 'ended';
   archivedAt: string | null;
@@ -21,8 +19,6 @@ export type CreateEventInput = {
   startDate: string;
   endDate: string;
   location: string;
-  hasAmAttendance: boolean;
-  hasPmAttendance: boolean;
 };
 
 export type AttendanceRecord = {
@@ -40,11 +36,14 @@ export type StudentAttendanceRecord = Omit<AttendanceRecord, 'studentId' | 'full
   startDate: string;
   endDate: string;
   location: string;
+  archivedAt: string | null;
 };
 
 export type Account = {
   role: UserRole;
   studentId?: string;
+  givenName?: string;
+  lastName?: string;
   fullName: string;
   email: string;
 };

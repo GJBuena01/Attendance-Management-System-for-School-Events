@@ -10,6 +10,7 @@ import HomeScreen from '../screens/HomeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EventScreen from '../screens/EventScreen';
 import EventArchivesScreen from '../screens/EventArchivesScreen';
+import AttendanceHistoryScreen from '../screens/AttendanceHistoryScreen';
 import type { Account, UserRole } from '../types/event';
 
 const Drawer = createDrawerNavigator();
@@ -94,6 +95,16 @@ export default function DrawerNavigation({ route }: DrawerNavigationProps) {
               size={size}
               color={color}
             />
+          ),
+        }}
+      />
+
+      <Drawer.Screen
+        name="Attendance History"
+        children={() => <AttendanceHistoryScreen account={account} />}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="time-outline" size={size} color={color} />
           ),
         }}
       />

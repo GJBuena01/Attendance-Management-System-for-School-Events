@@ -17,7 +17,7 @@ export default function BrandMark({
       }}
     >
       <Image
-        source={require('../../assets/AppLogo3.png')}
+        source={require('../../assets/AppLogoQR_draft.png')}
         style={{
           width: compact ? 42 : 76,
           height: compact ? 42 : 76,

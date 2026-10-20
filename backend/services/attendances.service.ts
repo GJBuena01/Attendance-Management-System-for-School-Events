@@ -99,3 +99,46 @@ export const deleteAttendance = (attendanceIdInput: string) => {
 		throw new ServiceError(500, "Failed to delete attendance record", error);
 	}
 };
+
+export const updateAttendance = (attendanceIdInput: string, input: unknown) => {
+	const attendanceId = Number(attendanceIdInput);
+	if (!Number.isSafeInteger(attendanceId) || attendanceId <= 0) {
+		throw new ServiceError(400, "attendanceId must be a positive integer");
+	}
+
+	if (typeof input !== "object" || input === null) {
+		throw new ServiceError(400, "scannedAt and scannedBy are required");
+	}
+
+	const body = input as Record<string, unknown>;
+	if (
+		typeof body.scannedAt !== "string" ||
+		!body.scannedAt.trim() ||
+		Number.isNaN(Date.parse(body.scannedAt)) ||
+		typeof body.scannedBy !== "string" ||
+		!body.scannedBy.trim()
+	) {
+		throw new ServiceError(400, "scannedAt must be a valid date and scannedBy is required");
+	}
+
+	try {
+		if (!attendancesRepository.attendanceExists(attendanceId)) {
+			throw new ServiceError(404, "Attendance record not found");
+		}
+
+		const record = attendancesRepository.updateAttendance(
+			attendanceId,
+			new Date(body.scannedAt).toISOString(),
+			body.scannedBy.trim(),
+		);
+		if (!record) {
+			throw new ServiceError(404, "Attendance record not found");
+		}
+		return record;
+	} catch (error) {
+		if (error instanceof ServiceError) {
+			throw error;
+		}
+		throw new ServiceError(500, "Failed to update attendance record", error);
+	}
+};
