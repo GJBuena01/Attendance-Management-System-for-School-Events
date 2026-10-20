@@ -25,3 +25,13 @@ export const deleteAttendance = (request: Request, response: Response): void => 
 		sendControllerError(response, error, "Failed to delete attendance record");
 	}
 };
+
+export const updateAttendance = (request: Request, response: Response): void => {
+	try {
+		response.json(
+			attendancesService.updateAttendance(String(request.params.attendanceId), request.body),
+		);
+	} catch (error) {
+		sendControllerError(response, error, "Failed to update attendance record");
+	}
+};

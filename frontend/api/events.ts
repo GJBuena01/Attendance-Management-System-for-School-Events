@@ -48,6 +48,18 @@ export async function createEvent(event: CreateEventInput): Promise<EventRecord>
   return parseResponse(response);
 }
 
+export async function updateEvent(eventId: number, event: CreateEventInput): Promise<EventRecord> {
+  const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(event),
+  });
+
+  return parseResponse(response);
+}
+
 export async function getEventAttendance(eventId: number): Promise<AttendanceRecord[]> {
   const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/attendance`);
   const body = await parseResponse(response);
@@ -75,6 +87,22 @@ export async function deleteAttendance(attendanceId: number): Promise<void> {
     method: 'DELETE',
   });
   await parseResponse(response);
+}
+
+export async function updateAttendance(input: {
+  attendanceId: number;
+  scannedAt: string;
+  scannedBy: string;
+}): Promise<AttendanceRecord> {
+  const response = await fetch(`${API_BASE_URL}/api/attendance/${input.attendanceId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ scannedAt: input.scannedAt, scannedBy: input.scannedBy }),
+  });
+
+  return parseResponse(response);
 }
 
 export async function getStudentAttendance(

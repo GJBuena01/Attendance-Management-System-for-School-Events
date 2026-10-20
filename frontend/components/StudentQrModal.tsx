@@ -27,7 +27,7 @@ export default function StudentQrModal({
         style={styles.qrModalOverlay}
       >
         <View style={styles.qrModalCard}>
-          <Text style={styles.qrModalTitle}>Student QR</Text>
+          <Text style={styles.qrModalTitle}>Attendance QR</Text>
           <Text style={styles.qrModalSubtitle}>
             Present this QR code for attendance
           </Text>

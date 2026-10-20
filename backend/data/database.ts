@@ -14,9 +14,21 @@ database.exec(`
 	CREATE TABLE IF NOT EXISTS students (
 		student_id TEXT PRIMARY KEY,
 		full_name TEXT NOT NULL,
+		given_name TEXT,
+		last_name TEXT,
 		email TEXT UNIQUE,
-		password TEXT,
+		google_subject TEXT UNIQUE,
 		created_at TEXT NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS officers (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		given_name TEXT NOT NULL,
+		last_name TEXT NOT NULL,
+		matching_name TEXT NOT NULL UNIQUE,
+		student_id TEXT UNIQUE,
+		created_at TEXT NOT NULL,
+		updated_at TEXT NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS events (
@@ -27,8 +39,6 @@ database.exec(`
 		end_date TEXT NOT NULL,
 		location TEXT NOT NULL,
 		created_at TEXT NOT NULL,
-		has_am_attendance INTEGER NOT NULL DEFAULT 0,
-		has_pm_attendance INTEGER NOT NULL DEFAULT 0,
 		status TEXT NOT NULL DEFAULT 'starting_soon',
 		archived_at TEXT,
 		archived_by TEXT
@@ -57,11 +67,71 @@ if (!studentColumns.has("email")) {
 	database.exec("ALTER TABLE students ADD COLUMN email TEXT");
 }
 
-if (!studentColumns.has("password")) {
-	database.exec("ALTER TABLE students ADD COLUMN password TEXT");
+if (!studentColumns.has("given_name")) {
+	database.exec("ALTER TABLE students ADD COLUMN given_name TEXT");
+}
+
+if (!studentColumns.has("last_name")) {
+	database.exec("ALTER TABLE students ADD COLUMN last_name TEXT");
+}
+
+if (!studentColumns.has("google_subject")) {
+	database.exec("ALTER TABLE students ADD COLUMN google_subject TEXT");
+}
+
+if (studentColumns.has("password")) {
+	database.exec("ALTER TABLE students DROP COLUMN password");
 }
 
 database.exec("CREATE UNIQUE INDEX IF NOT EXISTS students_email_unique ON students(email)");
+database.exec("CREATE UNIQUE INDEX IF NOT EXISTS students_google_subject_unique ON students(google_subject)");
+
+const legacyEventColumns = new Set(
+	(database.prepare("PRAGMA table_info(events)").all() as Array<{ name: string }>).map(
+		(column) => column.name,
+	),
+);
+
+for (const column of ["has_am_attendance", "has_pm_attendance"]) {
+	if (legacyEventColumns.has(column)) {
+		database.exec(`ALTER TABLE events DROP COLUMN ${column}`);
+	}
+}
+
+const officerRoster = [
+	["Gerald", "Marfe"],
+	["Achilles Jairon", "Ronato"],
+	["Aira", "Cabunas"],
+	["Malachi Keiron", "Colegado"],
+	["Ace Jerald", "Galvez"],
+	["Alexie Vel", "Paster"],
+	["Carl Vincent", "Torres"],
+	["Khezzia", "Quilaton"],
+	["Elaidiah", "Cempron"],
+	["Kris Lawrence", "Alvarez"],
+	["Dwayne", "Rubite"],
+	["Kenn JB", "Mundiz"],
+	["Shanice Mae", "Tampos"],
+	["Norikazu", "Palac"],
+	["Shannen", "Magbanua"],
+	["Patricia Jean", "Lauron"],
+	["Gerwin", "Sinampaga"],
+	["Maria Christina", "Lungtad"],
+	["Angie FY", "Otom"],
+	["Shylla Marie", "Bingil"],
+	["Gabriel Jee", "Buena"],
+	["Alexie Bryce", "San Jose"],
+] as const;
+
+const seedOfficer = database.prepare(
+	`INSERT OR IGNORE INTO officers
+		(given_name, last_name, matching_name, created_at, updated_at)
+	 VALUES (?, ?, ?, ?, ?)`,
+);
+const rosterSeededAt = new Date().toISOString();
+for (const [givenName, lastName] of officerRoster) {
+	seedOfficer.run(givenName, lastName, `${givenName} ${lastName}`.toLowerCase(), rosterSeededAt, rosterSeededAt);
+}
 
 const eventDates = database
 	.prepare("SELECT id, start_date AS startDate, end_date AS endDate FROM events")

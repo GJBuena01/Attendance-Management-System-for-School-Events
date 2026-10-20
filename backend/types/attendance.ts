@@ -13,6 +13,7 @@ export interface StudentAttendanceRecord extends Omit<AttendanceRecord, "student
 	startDate: string;
 	endDate: string;
 	location: string;
+	archivedAt: string | null;
 }
 
 export interface RecordAttendanceInput {

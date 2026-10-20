@@ -32,6 +32,23 @@ export const LoginScreenStyles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: 7,
   },
+  description: {
+    color: colors.muted,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 22,
+    textAlign: 'center',
+  },
+  configurationNotice: {
+    color: colors.maroon,
+    backgroundColor: colors.maroonSoft,
+    borderRadius: radii.sm,
+    padding: 11,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
   input: {
     borderWidth: 1,
     borderColor: colors.line,
@@ -53,6 +70,7 @@ export const LoginScreenStyles = StyleSheet.create({
     backgroundColor: colors.maroon,
     borderRadius: radii.sm,
     marginTop: 4,
+    cursor: 'pointer',
   },
   primaryButtonText: {
     color: colors.surface,
@@ -67,6 +85,7 @@ export const LoginScreenStyles = StyleSheet.create({
     borderColor: colors.maroon,
     borderRadius: radii.sm,
     marginTop: 12,
+    cursor: 'pointer',
   },
   secondaryButtonText: {
     color: colors.maroon,
