@@ -12,9 +12,24 @@ export const createEvent = (request: Request, response: Response): void => {
 
 export const listEvents = (request: Request, response: Response): void => {
 	try {
-		response.json(eventsService.listEvents(request.query.current === "true"));
+		response.json(
+			eventsService.listEvents(
+				request.query.current === "true",
+				request.query.archived === "true",
+			),
+		);
 	} catch (error) {
 		sendControllerError(response, error, "Failed to retrieve events");
+	}
+};
+
+export const archiveEvent = (request: Request, response: Response): void => {
+	try {
+		response.json(
+			eventsService.archiveEvent(String(request.params.eventId), request.body?.archivedBy),
+		);
+	} catch (error) {
+		sendControllerError(response, error, "Failed to archive event");
 	}
 };
 

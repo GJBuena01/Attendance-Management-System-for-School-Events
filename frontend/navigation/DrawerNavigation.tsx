@@ -101,7 +101,7 @@ export default function DrawerNavigation({ route }: DrawerNavigationProps) {
       {role === 'officer' ? (
         <Drawer.Screen
           name="Event Archives"
-          component={EventArchivesScreen}
+          children={() => <EventArchivesScreen account={account} />}
           options={{
             drawerIcon: ({ color, size }) => (
               <Ionicons name="archive-outline" size={size} color={color} />

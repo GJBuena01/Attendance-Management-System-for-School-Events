@@ -155,6 +155,39 @@ export const styles = StyleSheet.create({
     paddingVertical: 7,
     marginLeft: 8,
   },
+  eventStatusBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    marginTop: 7,
+  },
+  startingSoonStatusBadge: {
+    backgroundColor: '#FFF7D6',
+    borderColor: colors.yellow,
+  },
+  ongoingStatusBadge: {
+    backgroundColor: colors.successSoft,
+    borderColor: colors.success,
+  },
+  endedStatusBadge: {
+    backgroundColor: colors.dangerSoft,
+    borderColor: colors.danger,
+  },
+  eventStatusText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  startingSoonStatusText: {
+    color: colors.maroon,
+  },
+  ongoingStatusText: {
+    color: colors.success,
+  },
+  endedStatusText: {
+    color: colors.danger,
+  },
   eventActionIcon: {
     color: colors.maroon,
   },
@@ -164,20 +197,73 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     marginLeft: 5,
   },
-  deleteEventButton: {
+  archiveEventButton: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.dangerSoft,
+    backgroundColor: colors.yellowSoft,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 7,
     marginLeft: 8,
   },
-  deleteEventText: {
-    color: colors.danger,
+  archiveEventText: {
+    color: colors.maroon,
     fontSize: 12,
     fontWeight: '700',
     marginLeft: 5,
+  },
+  confirmationOverlay: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(33, 27, 29, 0.55)',
+    padding: 20,
+  },
+  confirmationPanel: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 20,
+  },
+  confirmationTitle: {
+    color: '#211B1D',
+    fontSize: 19,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  confirmationMessage: {
+    color: '#756A6D',
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 18,
+  },
+  confirmationActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  confirmationCancelButton: {
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    marginRight: 8,
+  },
+  confirmationCancelText: {
+    color: '#756A6D',
+    fontWeight: '800',
+  },
+  confirmationArchiveButton: {
+    backgroundColor: colors.maroon,
+    borderRadius: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  confirmationArchiveText: {
+    color: colors.yellow,
+    fontWeight: '800',
   },
   attendeeTableActions: {
     alignItems: 'flex-end',

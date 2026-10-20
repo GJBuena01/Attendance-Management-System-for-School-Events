@@ -18,8 +18,21 @@ const parseResponse = async (response: Response) => {
   return body;
 };
 
-export async function getEvents(): Promise<EventRecord[]> {
-  const response = await fetch(`${API_BASE_URL}/api/events`);
+export async function getEvents(options?: { archived?: boolean }): Promise<EventRecord[]> {
+  const query = options?.archived ? '?archived=true' : '';
+  const response = await fetch(`${API_BASE_URL}/api/events${query}`);
+  return parseResponse(response);
+}
+
+export async function archiveEvent(eventId: number, archivedBy: string): Promise<EventRecord> {
+  const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/archive`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ archivedBy }),
+  });
+
   return parseResponse(response);
 }
 

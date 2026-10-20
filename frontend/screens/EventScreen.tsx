@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Switch } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
+  archiveEvent,
   createEvent,
   getEventAttendance,
   getEvents,
@@ -70,6 +71,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [eventToArchive, setEventToArchive] = useState<EventRecord | null>(null);
 
   useEffect(() => {
     void loadEvents();
@@ -132,6 +134,21 @@ export default function EventScreen({ role, account }: EventScreenProps) {
     if (role === 'student' && account?.studentId) {
       void loadStudentAttendance(account.studentId);
     }
+  };
+
+  const archiveEventCard = async (event: EventRecord) => {
+    try {
+      await archiveEvent(event.id, account?.fullName ?? 'Officer');
+      await loadEvents();
+    } catch (requestError) {
+      setFormError(requestError instanceof Error ? requestError.message : 'Could not archive event.');
+    } finally {
+      setEventToArchive(null);
+    }
+  };
+
+  const confirmArchiveEvent = (event: EventRecord) => {
+    setEventToArchive(event);
   };
 
   const loadAttendance = async (eventId: number) => {
@@ -396,6 +413,33 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   <Text style={styles.recordDate}>
                     {event.startDate} - {event.endDate} | {event.location}
                   </Text>
+                  <View
+                    style={[
+                      styles.eventStatusBadge,
+                      event.status === 'ongoing'
+                        ? styles.ongoingStatusBadge
+                        : event.status === 'ended'
+                          ? styles.endedStatusBadge
+                          : styles.startingSoonStatusBadge,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.eventStatusText,
+                        event.status === 'ongoing'
+                          ? styles.ongoingStatusText
+                          : event.status === 'ended'
+                            ? styles.endedStatusText
+                            : styles.startingSoonStatusText,
+                      ]}
+                    >
+                      {event.status === 'starting_soon'
+                        ? 'Starting soon'
+                        : event.status === 'ongoing'
+                          ? 'Ongoing'
+                          : 'Ended'}
+                    </Text>
+                  </View>
                   {event.description ? (
                     <Text style={styles.recordDescription}>{event.description}</Text>
                   ) : null}
@@ -404,27 +448,28 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   {selectedEvent?.id === event.id ? 'Selected' : 'Select'}
                 </Text>
               </TouchableOpacity>
-              {selectedEvent?.id === event.id ? (
+              {role === 'officer' ? (
                 <View style={styles.eventCardActions}>
-                  <TouchableOpacity
-                    style={styles.eventActionButton}
-                    onPress={refreshSelectedEvent}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Refresh ${event.name}`}
-                  >
-                    <Ionicons name="refresh-outline" size={16} color={styles.eventActionIcon.color} />
-                    <Text style={styles.eventActionText}>Refresh</Text>
-                  </TouchableOpacity>
-                  {role === 'officer' ? (
+                  {selectedEvent?.id === event.id ? (
                     <TouchableOpacity
-                      style={styles.deleteEventButton}
+                      style={styles.eventActionButton}
+                      onPress={refreshSelectedEvent}
                       accessibilityRole="button"
-                      accessibilityLabel={`Delete ${event.name}`}
+                      accessibilityLabel={`Refresh ${event.name}`}
                     >
-                      <Ionicons name="trash-outline" size={16} color={styles.deleteEventText.color} />
-                      <Text style={styles.deleteEventText}>Delete</Text>
+                      <Ionicons name="refresh-outline" size={16} color={styles.eventActionIcon.color} />
+                      <Text style={styles.eventActionText}>Refresh</Text>
                     </TouchableOpacity>
                   ) : null}
+                  <TouchableOpacity
+                    style={styles.archiveEventButton}
+                    onPress={() => confirmArchiveEvent(event)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Archive ${event.name}`}
+                  >
+                    <Ionicons name="archive-outline" size={16} color={styles.archiveEventText.color} />
+                    <Text style={styles.archiveEventText}>Archive</Text>
+                  </TouchableOpacity>
                 </View>
               ) : null}
             </View>
@@ -482,6 +527,17 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               <Text style={styles.closeModalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
+          {!isAttendanceListVisible && selectedEvent ? (
+            <TouchableOpacity
+              style={styles.archiveEventButton}
+              onPress={() => confirmArchiveEvent(selectedEvent)}
+              accessibilityRole="button"
+              accessibilityLabel={`Archive ${selectedEvent.name}`}
+            >
+              <Ionicons name="archive-outline" size={16} color={styles.archiveEventText.color} />
+              <Text style={styles.archiveEventText}>Archive event</Text>
+            </TouchableOpacity>
+          ) : null}
 
           {isAttendanceListVisible ? (
             <>
@@ -654,6 +710,41 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
       </SafeAreaView>
+      </Modal>
+      <Modal
+        visible={eventToArchive !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEventToArchive(null)}
+      >
+        <View style={styles.confirmationOverlay}>
+          <View style={styles.confirmationPanel}>
+            <Text style={styles.confirmationTitle}>Archive event?</Text>
+            <Text style={styles.confirmationMessage}>
+              {eventToArchive?.name} will be removed from the active event lists.
+            </Text>
+            <View style={styles.confirmationActions}>
+              <TouchableOpacity
+                style={styles.confirmationCancelButton}
+                onPress={() => setEventToArchive(null)}
+                accessibilityRole="button"
+              >
+                <Text style={styles.confirmationCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmationArchiveButton}
+                onPress={() => {
+                  if (eventToArchive) {
+                    void archiveEventCard(eventToArchive);
+                  }
+                }}
+                accessibilityRole="button"
+              >
+                <Text style={styles.confirmationArchiveText}>Archive</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </>
   );

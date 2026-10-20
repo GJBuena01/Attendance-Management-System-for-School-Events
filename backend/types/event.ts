@@ -8,6 +8,9 @@ export interface EventRecord {
 	hasAmAttendance: boolean;
 	hasPmAttendance: boolean;
 	createdAt: string;
+	status: "starting_soon" | "ongoing" | "ended";
+	archivedAt: string | null;
+	archivedBy: string | null;
 }
 
 export interface CreateEventInput {

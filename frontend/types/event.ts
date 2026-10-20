@@ -10,9 +10,20 @@ export type EventRecord = {
   hasAmAttendance: boolean;
   hasPmAttendance: boolean;
   createdAt: string;
+  status: 'starting_soon' | 'ongoing' | 'ended';
+  archivedAt: string | null;
+  archivedBy: string | null;
 };
 
-export type CreateEventInput = Omit<EventRecord, 'id' | 'createdAt'>;
+export type CreateEventInput = {
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  hasAmAttendance: boolean;
+  hasPmAttendance: boolean;
+};
 
 export type AttendanceRecord = {
   id: number;
