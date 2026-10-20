@@ -67,17 +67,14 @@ export default function EventArchivesScreen({ account }: EventArchivesScreenProp
           <Text style={styles.message}>No archived events yet.</Text>
         ) : null}
         {events.map((event) => (
-          <TouchableOpacity
-            key={event.id}
-            style={styles.card}
-            onPress={() => void openEvent(event)}
-            accessibilityRole="button"
-            accessibilityLabel={`View attendees for ${event.name}`}
-          >
+          <View key={event.id} style={styles.card}>
             <Text style={styles.eventName}>{event.name}</Text>
             <Text style={styles.details}>
               {event.startDate} - {event.endDate} | {event.location}
             </Text>
+            {event.description ? (
+              <Text style={styles.description}>{event.description}</Text>
+            ) : null}
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
                 {event.status === 'starting_soon'
@@ -93,7 +90,15 @@ export default function EventArchivesScreen({ account }: EventArchivesScreenProp
             <Text style={styles.archiveDetails}>
               Archived by: {event.archivedBy ?? account.fullName}
             </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.viewAttendeesButton}
+              onPress={() => void openEvent(event)}
+              accessibilityRole="button"
+              accessibilityLabel={`View attendees for ${event.name}`}
+            >
+              <Text style={styles.viewAttendeesButtonText}>View attendees</Text>
+            </TouchableOpacity>
+          </View>
         ))}
       </ScrollView>
       <Modal
@@ -106,7 +111,9 @@ export default function EventArchivesScreen({ account }: EventArchivesScreenProp
           <View style={styles.modalHeader}>
             <View style={styles.modalTitleContainer}>
               <Text style={styles.modalTitle}>{selectedEvent?.name}</Text>
-              <Text style={styles.modalSubtitle}>Archived event attendees</Text>
+              <Text style={styles.modalSubtitle}>
+                Archived event attendees · {attendees.length} attendee{attendees.length === 1 ? '' : 's'}
+              </Text>
             </View>
             <TouchableOpacity
               style={styles.closeButton}
@@ -165,6 +172,7 @@ const styles = {
   },
   eventName: { color: colors.ink, fontSize: 17, fontWeight: '800' as const },
   details: { color: colors.muted, fontSize: 12, marginTop: 5 },
+  description: { color: colors.ink, fontSize: 13, lineHeight: 19, marginTop: 8 },
   statusBadge: {
     alignSelf: 'flex-start' as const,
     backgroundColor: colors.dangerSoft,
@@ -177,6 +185,15 @@ const styles = {
   },
   statusText: { color: colors.danger, fontSize: 11, fontWeight: '800' as const },
   archiveDetails: { color: colors.muted, fontSize: 13, marginTop: 8 },
+  viewAttendeesButton: {
+    alignSelf: 'flex-start' as const,
+    backgroundColor: colors.maroon,
+    borderRadius: radii.sm,
+    marginTop: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  viewAttendeesButtonText: { color: colors.surface, fontWeight: '800' as const },
   modal: { flex: 1, backgroundColor: colors.canvas, padding: 20 },
   modalHeader: {
     flexDirection: 'row' as const,
