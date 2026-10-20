@@ -2,6 +2,12 @@ import * as authRepository from "../repositories/auth.repository";
 import { ServiceError } from "../types/service-error";
 import type { StudentResponse } from "../types/auth";
 
+import { OAuth2Client } from "google-auth-library";
+import { getCorrectedGoogleName, getStudentIdFromEmail, normalizeEmail } from "../data/identity";
+import type { GoogleIdentity } from "../types/auth";
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 const createStudentId = (): string => {
 	let studentId: string;
 	do {
@@ -11,90 +17,80 @@ const createStudentId = (): string => {
 	return studentId;
 };
 
-export const signUp = (input: unknown): StudentResponse => {
-	if (typeof input !== "object" || input === null) {
-		throw new ServiceError(400, "fullName, email, and password are required");
-	}
-
-	const { fullName, email, password } = input as Record<string, unknown>;
-	if (
-		typeof fullName !== "string" ||
-		typeof email !== "string" ||
-		typeof password !== "string" ||
-		!fullName.trim() ||
-		!email.trim() ||
-		!password.trim() ||
-		!email.includes("@")
-	) {
-		throw new ServiceError(400, "fullName, email, and password are required");
-	}
-
-	const normalizedFullName = fullName.trim();
-	const normalizedEmail = email.trim().toLowerCase();
-	const studentId = createStudentId();
-	try {
-		authRepository.createStudent(
-			studentId,
-			normalizedFullName,
-			normalizedEmail,
-			password,
-			new Date().toISOString(),
-		);
-	} catch (error) {
-		if (
-			typeof error === "object" &&
-			error !== null &&
-			(error as { code?: string }).code === "SQLITE_CONSTRAINT_UNIQUE"
-		) {
-			throw new ServiceError(409, "An account with that email already exists");
-		}
-		throw new ServiceError(500, "Failed to create student account", error);
-	}
-
-	return { role: "student", studentId, fullName: normalizedFullName, email: normalizedEmail };
-};
-
-export const logIn = (input: unknown): StudentResponse => {
-	if (typeof input !== "object" || input === null) {
-		throw new ServiceError(400, "email and password are required");
-	}
-
-	const { email, password } = input as Record<string, unknown>;
-	if (typeof email !== "string" || typeof password !== "string" || !email.trim() || !password) {
-		throw new ServiceError(400, "email and password are required");
-	}
-
-	const normalizedEmail = email.trim().toLowerCase();
-	if (normalizedEmail === "student" && password === "student") {
-		try {
-			authRepository.ensureDemoStudent(new Date().toISOString());
-		} catch (error) {
-			throw new ServiceError(500, "Failed to log in", error);
-		}
-		return {
-			role: "student",
-			studentId: "123456",
-			fullName: "Demo Student",
-			email: "student",
-		};
+const verifyGoogleToken = async (token: string): Promise<GoogleIdentity> => {
+	if (!process.env.GOOGLE_CLIENT_ID) {
+		throw new ServiceError(500, "Google authentication is not configured");
 	}
 
 	try {
-		const student = authRepository.findStudentByEmail(normalizedEmail);
-		if (!student || student.password !== password) {
-			throw new ServiceError(401, "Invalid email or password");
+		const ticket = await googleClient.verifyIdToken({
+			idToken: token,
+			audience: process.env.GOOGLE_CLIENT_ID,
+		});
+		const payload = ticket.getPayload();
+		if (!payload?.sub || !payload.email || payload.email_verified !== true || !payload.given_name || !payload.family_name) {
+			throw new ServiceError(401, "Google account information is incomplete");
 		}
 
 		return {
-			role: "student",
-			studentId: student.studentId,
-			fullName: student.fullName,
-			email: student.email,
+			subject: payload.sub,
+			email: normalizeEmail(payload.email),
+			givenName: payload.given_name,
+			familyName: payload.family_name,
 		};
 	} catch (error) {
 		if (error instanceof ServiceError) {
 			throw error;
 		}
-		throw new ServiceError(500, "Failed to log in", error);
+		throw new ServiceError(401, "Invalid Google sign-in token");
+	}
+};
+
+export const signInWithGoogle = async (input: unknown): Promise<StudentResponse> => {
+	if (typeof input !== "object" || input === null || typeof (input as Record<string, unknown>).idToken !== "string") {
+		throw new ServiceError(400, "idToken is required");
+	}
+
+	const identity = await verifyGoogleToken((input as { idToken: string }).idToken);
+	const name = getCorrectedGoogleName(identity.givenName, identity.familyName);
+	const officer = authRepository.findOfficerByMatchingName(name.matchingName);
+	const existingStudent = authRepository.findStudentByGoogleSubject(identity.subject) ?? authRepository.findStudentByEmail(identity.email);
+	const studentId = getStudentIdFromEmail(identity.email) ?? existingStudent?.studentId ?? officer?.studentId ?? createStudentId();
+
+	if (officer) {
+		if (officer.studentId !== studentId) {
+			authRepository.assignOfficerStudentId(officer.id, studentId);
+		}
+		return {
+			role: "officer",
+			studentId,
+			givenName: name.givenName,
+			lastName: name.lastName,
+			fullName: name.fullName,
+			email: identity.email,
+		};
+	}
+
+	try {
+		const student = authRepository.upsertStudent({
+			studentId,
+			givenName: name.givenName,
+			lastName: name.lastName,
+			fullName: name.fullName,
+			email: identity.email,
+			googleSubject: identity.subject,
+			createdAt: new Date().toISOString(),
+		});
+
+		return {
+			role: "student",
+			studentId: student.studentId,
+			givenName: student.givenName,
+			lastName: student.lastName,
+			fullName: student.fullName,
+			email: student.email,
+		};
+	} catch (error) {
+		throw new ServiceError(500, "Failed to create student account", error);
 	}
 };

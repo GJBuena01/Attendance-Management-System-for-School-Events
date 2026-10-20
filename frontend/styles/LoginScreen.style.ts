@@ -32,6 +32,13 @@ export const LoginScreenStyles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: 7,
   },
+  description: {
+    color: colors.muted,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 22,
+    textAlign: 'center',
+  },
   input: {
     borderWidth: 1,
     borderColor: colors.line,

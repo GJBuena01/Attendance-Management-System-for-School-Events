@@ -45,6 +45,8 @@ export type StudentAttendanceRecord = Omit<AttendanceRecord, 'studentId' | 'full
 export type Account = {
   role: UserRole;
   studentId?: string;
+  givenName?: string;
+  lastName?: string;
   fullName: string;
   email: string;
 };
