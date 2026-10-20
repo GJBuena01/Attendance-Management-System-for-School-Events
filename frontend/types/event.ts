@@ -40,6 +40,7 @@ export type StudentAttendanceRecord = Omit<AttendanceRecord, 'studentId' | 'full
   startDate: string;
   endDate: string;
   location: string;
+  archivedAt: string | null;
 };
 
 export type Account = {

@@ -19,6 +19,8 @@ import {
   getEvents,
   getStudentAttendance,
   recordAttendance,
+  updateAttendance,
+  updateEvent,
 } from '../api/events';
 import type {
   Account,
@@ -98,6 +100,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const [selectedEvent, setSelectedEvent] = useState<EventRecord | null>(null);
   const [form, setForm] = useState<AttendanceForm>(emptyForm);
   const [eventForm, setEventForm] = useState<EventForm>(emptyEventForm);
+  const [editingEventId, setEditingEventId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isEventFormVisible, setIsEventFormVisible] = useState(false);
@@ -118,6 +121,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   });
   const [isEditingAttendees, setIsEditingAttendees] = useState(false);
   const [selectedAttendee, setSelectedAttendee] = useState<AttendanceRecord | null>(null);
+  const [attendanceTimeDraft, setAttendanceTimeDraft] = useState('');
   const [attendeeToDelete, setAttendeeToDelete] = useState<AttendanceRecord | null>(null);
 
   useEffect(() => {
@@ -202,6 +206,30 @@ export default function EventScreen({ role, account }: EventScreenProps) {
     setAttendeeToDelete(record);
   };
 
+  const updateSelectedAttendance = async () => {
+    if (!selectedAttendee) return;
+
+    try {
+      const updatedRecord = await updateAttendance({
+        attendanceId: selectedAttendee.id,
+        scannedAt: attendanceTimeDraft,
+        scannedBy: selectedAttendee.scannedBy,
+      });
+      setRecords((currentRecords) =>
+        currentRecords.map((record) => (record.id === updatedRecord.id ? updatedRecord : record)),
+      );
+      setSelectedAttendee(updatedRecord);
+      setAttendanceTimeDraft(updatedRecord.scannedAt);
+      setFormError('');
+      setSuccessMessage(`${updatedRecord.fullName}'s attendance time was updated.`);
+    } catch (requestError) {
+      setFormError(
+        requestError instanceof Error ? requestError.message : 'Could not update attendance record.',
+      );
+      setSuccessMessage('');
+    }
+  };
+
   const removeAttendee = async () => {
     if (!attendeeToDelete) return;
 
@@ -277,7 +305,23 @@ export default function EventScreen({ role, account }: EventScreenProps) {
     setDatePickerField(null);
   };
 
-  const handleCreateEvent = async () => {
+  const startEditingEvent = (event: EventRecord) => {
+    setEditingEventId(event.id);
+    setEventForm({
+      name: event.name,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      location: event.location,
+      description: event.description,
+      hasAmAttendance: event.hasAmAttendance,
+      hasPmAttendance: event.hasPmAttendance,
+    });
+    setIsEventFormVisible(true);
+    setFormError('');
+    setSuccessMessage('');
+  };
+
+  const handleSaveEvent = async () => {
     const name = eventForm.name.trim();
     const startDate = eventForm.startDate.trim();
     const endDate = eventForm.endDate.trim();
@@ -312,17 +356,25 @@ export default function EventScreen({ role, account }: EventScreenProps) {
       hasPmAttendance: eventForm.hasPmAttendance,
     };
 
+    const wasEditing = editingEventId !== null;
     setIsSubmitting(true);
     try {
-      const newEvent = await createEvent(input);
-      setEvents((currentEvents) => [newEvent, ...currentEvents]);
-      setSelectedEvent(newEvent);
+      const savedEvent = wasEditing
+        ? await updateEvent(editingEventId, input)
+        : await createEvent(input);
+      setEvents((currentEvents) =>
+        wasEditing
+          ? currentEvents.map((event) => (event.id === savedEvent.id ? savedEvent : event))
+          : [savedEvent, ...currentEvents],
+      );
+      setSelectedEvent(savedEvent);
       setEventForm(emptyEventForm);
+      setEditingEventId(null);
       setIsEventFormVisible(false);
       setFormError('');
-      setSuccessMessage(`${name} was added.`);
+      setSuccessMessage(`${name} was ${wasEditing ? 'updated' : 'added'}.`);
     } catch (requestError) {
-      setFormError(requestError instanceof Error ? requestError.message : 'Could not create event.');
+      setFormError(requestError instanceof Error ? requestError.message : 'Could not save event.');
       setSuccessMessage('');
     } finally {
       setIsSubmitting(false);
@@ -412,6 +464,8 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           style={styles.addButton}
           onPress={() => {
             setIsEventFormVisible((currentValue) => !currentValue);
+            setEditingEventId(null);
+            setEventForm(emptyEventForm);
             setFormError('');
             setSuccessMessage('');
           }}
@@ -423,7 +477,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
 
       {role === 'officer' && isEventFormVisible ? (
         <View style={styles.formPanel}>
-          <Text style={styles.formTitle}>Add event</Text>
+          <Text style={styles.formTitle}>{editingEventId === null ? 'Add event' : 'Edit event'}</Text>
           <TextInput
             style={styles.input}
             placeholder="Event name"
@@ -591,10 +645,12 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           ) : null}
           <TouchableOpacity
             style={styles.saveButton}
-            onPress={handleCreateEvent}
+            onPress={handleSaveEvent}
             disabled={isSubmitting}
           >
-            <Text style={styles.buttonText}>{isSubmitting ? 'Saving event...' : 'Save event'}</Text>
+            <Text style={styles.buttonText}>
+              {isSubmitting ? 'Saving event...' : editingEventId === null ? 'Create event' : 'Update event'}
+            </Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -698,6 +754,15 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                       <Text style={styles.eventActionText}>Refresh</Text>
                     </TouchableOpacity>
                   ) : null}
+                  <TouchableOpacity
+                    style={styles.eventActionButton}
+                    onPress={() => startEditingEvent(event)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Edit ${event.name}`}
+                  >
+                    <Ionicons name="create-outline" size={16} color={styles.eventActionIcon.color} />
+                    <Text style={styles.eventActionText}>Edit</Text>
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.archiveEventButton}
                     onPress={() => confirmArchiveEvent(event)}
@@ -806,6 +871,27 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   </Text>
                 </TouchableOpacity>
               </View>
+              {isEditingAttendees && selectedAttendee ? (
+                <View style={styles.formPanel}>
+                  <Text style={styles.formDescription}>
+                    Update attendance time for {selectedAttendee.fullName} (ISO date/time)
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    value={attendanceTimeDraft}
+                    onChangeText={setAttendanceTimeDraft}
+                    placeholder="2026-10-20T09:30:00.000Z"
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={() => void updateSelectedAttendance()}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.buttonText}>Update attendance time</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
               {selectedRecords.length === 0 ? (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyStateTitle}>No attendance records</Text>
@@ -850,7 +936,10 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                               : null,
                           ]}
                           onPress={() => {
-                            if (isEditingAttendees) setSelectedAttendee(record);
+                            if (isEditingAttendees) {
+                              setSelectedAttendee(record);
+                              setAttendanceTimeDraft(record.scannedAt);
+                            }
                           }}
                           disabled={!isEditingAttendees}
                         >

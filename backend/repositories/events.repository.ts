@@ -68,6 +68,36 @@ export const createEvent = (input: CreateEventInput): EventRecord => {
 	return toEventRecord(row);
 };
 
+export const updateEvent = (eventId: number, input: CreateEventInput): EventRecord | undefined => {
+	const result = database
+		.prepare(
+			`UPDATE events
+			 SET name = ?, description = ?, start_date = ?, end_date = ?, location = ?,
+				has_am_attendance = ?, has_pm_attendance = ?
+			 WHERE id = ? AND archived_at IS NULL`,
+		)
+		.run(
+			input.name,
+			input.description,
+			input.startDate,
+			input.endDate,
+			input.location,
+			input.hasAmAttendance ? 1 : 0,
+			input.hasPmAttendance ? 1 : 0,
+			eventId,
+		);
+
+	if (result.changes === 0) {
+		return undefined;
+	}
+
+	const row = database
+		.prepare(`SELECT ${eventColumns} FROM events WHERE id = ?`)
+		.get(eventId) as EventRow | undefined;
+
+	return row ? toEventRecord(row) : undefined;
+};
+
 export const listEvents = (
 	currentAt: string,
 	currentOnly: boolean,

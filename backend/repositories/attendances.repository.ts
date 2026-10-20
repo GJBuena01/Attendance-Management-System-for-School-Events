@@ -16,6 +16,7 @@ type AttendanceRow = {
 	startDate?: string;
 	endDate?: string;
 	location?: string;
+	archivedAt?: string | null;
 };
 
 const toAttendanceRecord = (row: AttendanceRow): AttendanceRecord => ({
@@ -35,6 +36,7 @@ const toStudentAttendanceRecord = (row: AttendanceRow): StudentAttendanceRecord 
 	startDate: String(row.startDate),
 	endDate: String(row.endDate),
 	location: String(row.location),
+	archivedAt: row.archivedAt ?? null,
 	scannedBy: row.scannedBy,
 	status: "present",
 	scannedAt: row.scannedAt,
@@ -101,11 +103,39 @@ export const deleteAttendance = (attendanceId: number): boolean => {
 	return result.changes > 0;
 };
 
+export const updateAttendance = (
+	attendanceId: number,
+	scannedAt: string,
+	scannedBy: string,
+): AttendanceRecord | undefined => {
+	const result = database
+		.prepare("UPDATE attendances SET scanned_at = ?, scanned_by = ? WHERE id = ?")
+		.run(scannedAt, scannedBy, attendanceId);
+
+	if (result.changes === 0) {
+		return undefined;
+	}
+
+	const row = database
+		.prepare(
+			`SELECT a.id, a.student_id AS studentId, a.event_id AS eventId,
+				s.full_name AS fullName, a.scanned_by AS scannedBy,
+				a.status, a.scanned_at AS scannedAt
+			 FROM attendances a
+			 JOIN students s ON s.student_id = a.student_id
+			 WHERE a.id = ?`,
+		)
+		.get(attendanceId) as AttendanceRow | undefined;
+
+	return row ? toAttendanceRecord(row) : undefined;
+};
+
 export const listStudentAttendance = (studentId: string): StudentAttendanceRecord[] => {
 	const rows = database
 		.prepare(
 			`SELECT a.id, a.event_id AS eventId, e.name AS eventName,
 				e.start_date AS startDate, e.end_date AS endDate, e.location,
+				e.archived_at AS archivedAt,
 				a.scanned_by AS scannedBy, a.status, a.scanned_at AS scannedAt
 			 FROM attendances a
 			 JOIN events e ON e.id = a.event_id

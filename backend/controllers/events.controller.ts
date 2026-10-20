@@ -10,6 +10,14 @@ export const createEvent = (request: Request, response: Response): void => {
 	}
 };
 
+export const updateEvent = (request: Request, response: Response): void => {
+	try {
+		response.json(eventsService.updateEvent(String(request.params.eventId), request.body));
+	} catch (error) {
+		sendControllerError(response, error, "Failed to update event");
+	}
+};
+
 export const listEvents = (request: Request, response: Response): void => {
 	try {
 		response.json(

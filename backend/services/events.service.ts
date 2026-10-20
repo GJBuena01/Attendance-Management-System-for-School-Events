@@ -64,6 +64,66 @@ export const listEvents = (currentOnly: boolean, archived: boolean) => {
 	}
 };
 
+export const updateEvent = (eventIdInput: string, input: unknown) => {
+	const eventId = Number(eventIdInput);
+	if (!Number.isSafeInteger(eventId) || eventId <= 0) {
+		throw new ServiceError(400, "eventId must be a positive integer");
+	}
+
+	if (typeof input !== "object" || input === null) {
+		throw new ServiceError(400, invalidEventMessage);
+	}
+
+	const body = input as Record<string, unknown>;
+	const { name, description, location, hasAmAttendance, hasPmAttendance } = body;
+	const startDate = normalizeEventDate(body.startDate, "start");
+	const endDate = normalizeEventDate(body.endDate, "end");
+	if (
+		typeof name !== "string" ||
+		typeof description !== "string" ||
+		typeof location !== "string" ||
+		typeof hasAmAttendance !== "boolean" ||
+		typeof hasPmAttendance !== "boolean" ||
+		!name.trim() ||
+		!description.trim() ||
+		!location.trim() ||
+		(!hasAmAttendance && !hasPmAttendance) ||
+		!startDate ||
+		!endDate
+	) {
+		throw new ServiceError(400, invalidEventMessage);
+	}
+
+	if (Date.parse(endDate) < Date.parse(startDate)) {
+		throw new ServiceError(400, "endDate must not be earlier than startDate");
+	}
+
+	try {
+		if (!eventsRepository.eventExists(eventId)) {
+			throw new ServiceError(404, "Event not found");
+		}
+
+		const event = eventsRepository.updateEvent(eventId, {
+			name: name.trim(),
+			description: description.trim(),
+			startDate,
+			endDate,
+			location: location.trim(),
+			hasAmAttendance,
+			hasPmAttendance,
+		});
+		if (!event) {
+			throw new ServiceError(409, "Archived events cannot be edited");
+		}
+		return event;
+	} catch (error) {
+		if (error instanceof ServiceError) {
+			throw error;
+		}
+		throw new ServiceError(500, "Failed to update event", error);
+	}
+};
+
 export const archiveEvent = (eventIdInput: string, archivedByInput: unknown) => {
 	const eventId = Number(eventIdInput);
 	if (!Number.isSafeInteger(eventId) || eventId <= 0) {
