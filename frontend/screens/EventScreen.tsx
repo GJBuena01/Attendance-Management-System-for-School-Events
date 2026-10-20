@@ -764,18 +764,6 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               <Text style={styles.closeModalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
-          {!isAttendanceListVisible && selectedEvent ? (
-            <TouchableOpacity
-              style={styles.archiveEventButton}
-              onPress={() => confirmArchiveEvent(selectedEvent)}
-              accessibilityRole="button"
-              accessibilityLabel={`Archive ${selectedEvent.name}`}
-            >
-              <Ionicons name="archive-outline" size={16} color={styles.archiveEventText.color} />
-              <Text style={styles.archiveEventText}>Archive event</Text>
-            </TouchableOpacity>
-          ) : null}
-
           {isAttendanceListVisible ? (
             <>
               <TouchableOpacity
@@ -824,11 +812,6 @@ export default function EventScreen({ role, account }: EventScreenProps) {
                   <Text style={styles.emptyStateText}>
                     Submit the attendance form for this event to add the first attendee.
                   </Text>
-                </View>
-              ) : filteredAttendees.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateTitle}>No matching attendees</Text>
-                  <Text style={styles.emptyStateText}>Try a different name or student ID.</Text>
                 </View>
               ) : filteredAttendees.length === 0 ? (
                 <View style={styles.emptyState}>
@@ -898,6 +881,17 @@ export default function EventScreen({ role, account }: EventScreenProps) {
               <Text style={styles.eventWorkspaceDescription}>
                 {selectedEvent?.description}
               </Text>
+              <TouchableOpacity
+                style={styles.archiveEventButton}
+                onPress={() => {
+                  if (selectedEvent) confirmArchiveEvent(selectedEvent);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Archive ${selectedEvent?.name}`}
+              >
+                <Ionicons name="archive-outline" size={16} color={styles.archiveEventText.color} />
+                <Text style={styles.archiveEventText}>Archive event</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.viewAttendanceButton}
                 onPress={() => setIsAttendanceListVisible(true)}

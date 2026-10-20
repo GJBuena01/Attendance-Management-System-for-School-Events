@@ -44,7 +44,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   refreshButtonText: {
-    color: colors.yellow,
+    color: colors.surface,
     fontWeight: '800',
   },
   searchBar: {
@@ -587,12 +587,15 @@ export const styles = StyleSheet.create({
   },
   backToFormButton: {
     alignSelf: 'flex-start',
-    paddingVertical: 8,
-    marginBottom: 12,
+    backgroundColor: colors.maroon,
+    borderRadius: radii.sm,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    marginBottom: 16,
   },
   backToFormButtonText: {
-    color: colors.maroon,
-    fontWeight: '700',
+    color: colors.surface,
+    fontWeight: '800',
   },
   attendanceTable: {
     minWidth: 790,

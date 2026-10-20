@@ -1,8 +1,8 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCallback, useState } from 'react';
-import { Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { getEvents } from '../api/events';
+import { getEventAttendance, getEvents } from '../api/events';
 import type { Account, EventRecord } from '../types/event';
 import { colors, radii } from '../styles/theme';
 
@@ -14,6 +14,9 @@ export default function EventArchivesScreen({ account }: EventArchivesScreenProp
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<EventRecord | null>(null);
+  const [attendees, setAttendees] = useState<Awaited<ReturnType<typeof getEventAttendance>>>([]);
+  const [isAttendeeLoading, setIsAttendeeLoading] = useState(false);
 
   const loadArchivedEvents = useCallback(async () => {
     setIsLoading(true);
@@ -26,6 +29,18 @@ export default function EventArchivesScreen({ account }: EventArchivesScreenProp
       setIsLoading(false);
     }
   }, []);
+
+  const openEvent = async (event: EventRecord) => {
+    setSelectedEvent(event);
+    setIsAttendeeLoading(true);
+    try {
+      setAttendees(await getEventAttendance(event.id));
+    } catch {
+      setAttendees([]);
+    } finally {
+      setIsAttendeeLoading(false);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -52,7 +67,13 @@ export default function EventArchivesScreen({ account }: EventArchivesScreenProp
           <Text style={styles.message}>No archived events yet.</Text>
         ) : null}
         {events.map((event) => (
-          <View key={event.id} style={styles.card}>
+          <TouchableOpacity
+            key={event.id}
+            style={styles.card}
+            onPress={() => void openEvent(event)}
+            accessibilityRole="button"
+            accessibilityLabel={`View attendees for ${event.name}`}
+          >
             <Text style={styles.eventName}>{event.name}</Text>
             <Text style={styles.details}>
               {event.startDate} - {event.endDate} | {event.location}
@@ -72,9 +93,48 @@ export default function EventArchivesScreen({ account }: EventArchivesScreenProp
             <Text style={styles.archiveDetails}>
               Archived by: {event.archivedBy ?? account.fullName}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
+      <Modal
+        visible={selectedEvent !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setSelectedEvent(null)}
+      >
+        <SafeAreaView edges={['top', 'bottom']} style={styles.modal}>
+          <View style={styles.modalHeader}>
+            <View style={styles.modalTitleContainer}>
+              <Text style={styles.modalTitle}>{selectedEvent?.name}</Text>
+              <Text style={styles.modalSubtitle}>Archived event attendees</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSelectedEvent(null)}
+              accessibilityRole="button"
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+          {isAttendeeLoading ? (
+            <Text style={styles.message}>Loading attendees...</Text>
+          ) : attendees.length === 0 ? (
+            <Text style={styles.message}>No attendance records for this event.</Text>
+          ) : (
+            <ScrollView>
+              {attendees.map((attendee) => (
+                <View key={attendee.id} style={styles.attendeeCard}>
+                  <Text style={styles.attendeeName}>{attendee.fullName}</Text>
+                  <Text style={styles.attendeeDetails}>
+                    {attendee.studentId} · {attendee.scannedAt}
+                  </Text>
+                  <Text style={styles.attendeeDetails}>Scanned by: {attendee.scannedBy}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -92,7 +152,7 @@ const styles = {
     paddingHorizontal: 13,
     paddingVertical: 10,
   },
-  refreshButtonText: { color: colors.yellow, fontWeight: '800' as const },
+  refreshButtonText: { color: colors.surface, fontWeight: '800' as const },
   message: { color: colors.muted, fontSize: 14, marginTop: 12 },
   error: { color: colors.danger, fontSize: 14, marginTop: 12 },
   card: {
@@ -117,4 +177,31 @@ const styles = {
   },
   statusText: { color: colors.danger, fontSize: 11, fontWeight: '800' as const },
   archiveDetails: { color: colors.muted, fontSize: 13, marginTop: 8 },
+  modal: { flex: 1, backgroundColor: colors.canvas, padding: 20 },
+  modalHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginBottom: 20,
+  },
+  modalTitleContainer: { flex: 1, marginRight: 12 },
+  modalTitle: { color: colors.ink, fontSize: 21, fontWeight: '800' as const },
+  modalSubtitle: { color: colors.muted, fontSize: 13, marginTop: 4 },
+  closeButton: {
+    backgroundColor: colors.maroon,
+    borderRadius: radii.sm,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  closeButtonText: { color: colors.surface, fontWeight: '800' as const },
+  attendeeCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 10,
+  },
+  attendeeName: { color: colors.ink, fontSize: 16, fontWeight: '800' as const },
+  attendeeDetails: { color: colors.muted, fontSize: 13, marginTop: 5 },
 };

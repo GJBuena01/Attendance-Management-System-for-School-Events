@@ -71,7 +71,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   refreshText: {
-    color: colors.yellow,
+    color: colors.surface,
     fontWeight: '800',
   },
   sectionPanel: {
@@ -340,7 +340,7 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   backButtonText: {
-    color: colors.yellow,
+    color: colors.surface,
     fontWeight: '800',
   },
   detailText: {
