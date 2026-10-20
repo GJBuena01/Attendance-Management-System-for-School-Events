@@ -12,9 +12,11 @@ type GoogleSignInOptions = {
 };
 
 export function useGoogleSignIn({ onSuccess, onError }: GoogleSignInOptions) {
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+  const isConfigured = Boolean(webClientId);
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: webClientId ?? 'missing-google-client-id',
+    webClientId: webClientId ?? 'missing-google-client-id',
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   });
@@ -39,9 +41,10 @@ export function useGoogleSignIn({ onSuccess, onError }: GoogleSignInOptions) {
   }, [onError, onSuccess, response]);
 
   return {
-    isReady: Boolean(request),
+    isConfigured,
+    isReady: isConfigured && Boolean(request),
     signIn: () => {
-      if (!request) {
+      if (!isConfigured || !request) {
         onError('Google sign-in is not configured.');
         return;
       }

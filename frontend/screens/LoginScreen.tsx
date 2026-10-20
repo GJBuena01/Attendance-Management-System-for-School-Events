@@ -23,7 +23,7 @@ export default function LoginScreen() {
     setError(message);
   }, []);
 
-  const { isReady, signIn } = useGoogleSignIn({
+  const { isConfigured, signIn } = useGoogleSignIn({
     onSuccess: handleSuccess,
     onError: handleError,
   });
@@ -44,8 +44,11 @@ export default function LoginScreen() {
           <Text style={LoginScreenStyles.description}>
             Sign in with your Google account to access attendance events.
           </Text>
+          {!isConfigured ? <Text style={LoginScreenStyles.configurationNotice}>
+            Google sign-in needs to be configured before it can be used.
+          </Text> : null}
           {error ? <Text style={LoginScreenStyles.error}>{error}</Text> : null}
-          <TouchableOpacity style={LoginScreenStyles.primaryButton} onPress={handleLogin} disabled={isSubmitting || !isReady}>
+          <TouchableOpacity style={LoginScreenStyles.primaryButton} onPress={handleLogin} disabled={isSubmitting} accessibilityRole="button">
             {isSubmitting ? <ActivityIndicator color={colors.surface} /> : <Text style={LoginScreenStyles.primaryButtonText}>Continue with Google</Text>}
           </TouchableOpacity>
           <TouchableOpacity style={LoginScreenStyles.secondaryButton} onPress={() => navigation.navigate({ name: 'Signup' } as never)}>
