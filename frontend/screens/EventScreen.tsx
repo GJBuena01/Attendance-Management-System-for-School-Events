@@ -72,6 +72,7 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const [hasScanned, setHasScanned] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [eventToArchive, setEventToArchive] = useState<EventRecord | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     void loadEvents();
@@ -264,6 +265,21 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const selectedRecords = selectedEvent
     ? records.filter((record) => record.eventId === selectedEvent.id)
     : [];
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredEvents = events.filter((event) => {
+    if (!normalizedSearchQuery) {
+      return true;
+    }
+
+    return [
+      event.name,
+      event.description ?? '',
+      event.location,
+      event.startDate,
+      event.endDate,
+      event.status,
+    ].some((value) => value.toLowerCase().includes(normalizedSearchQuery));
+  });
 
   return (
     <>
@@ -284,6 +300,9 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           style={styles.searchInput}
           placeholder="Search events"
           placeholderTextColor={styles.searchPlaceholder.color}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCorrect={false}
         />
       </View>
 
@@ -385,10 +404,15 @@ export default function EventScreen({ role, account }: EventScreenProps) {
           <Text style={styles.emptyStateTitle}>No events yet</Text>
           <Text style={styles.emptyStateText}>New events will appear here.</Text>
         </View>
+      ) : filteredEvents.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateTitle}>No matching events</Text>
+          <Text style={styles.emptyStateText}>Try a different keyword.</Text>
+        </View>
       ) : (
         <>
           <Text style={styles.sectionTitle}>Available events</Text>
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <View
               key={event.id}
               style={[

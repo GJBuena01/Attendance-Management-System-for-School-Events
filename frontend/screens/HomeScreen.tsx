@@ -23,6 +23,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
   const [isAttendeeListVisible, setIsAttendeeListVisible] = useState(false);
   const [isQrVisible, setIsQrVisible] = useState(false);
   const [eventToArchive, setEventToArchive] = useState<EventRecord | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     void refreshEvents();
@@ -117,6 +118,21 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
   const selectedStudentRecord = studentRecords.find(
     (record) => record.eventId === selectedEvent?.id,
   );
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredEvents = events.filter((event) => {
+    if (!normalizedSearchQuery) {
+      return true;
+    }
+
+    return [
+      event.name,
+      event.description,
+      event.location,
+      event.startDate,
+      event.endDate,
+      event.status,
+    ].some((value) => value.toLowerCase().includes(normalizedSearchQuery));
+  });
 
   const renderEventList = () => (
     <View style={styles.sectionPanel}>
@@ -137,8 +153,13 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           <Text style={styles.emptyStateTitle}>No events yet</Text>
           <Text style={styles.emptyStateText}>New school events will appear here.</Text>
         </View>
+      ) : filteredEvents.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateTitle}>No matching events</Text>
+          <Text style={styles.emptyStateText}>Try a different keyword.</Text>
+        </View>
       ) : (
-        events.map((event) => {
+        filteredEvents.map((event) => {
           const attended = studentRecords.some((record) => record.eventId === event.id);
 
           return (
@@ -244,6 +265,9 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           style={styles.searchInput}
           placeholder="Search events"
           placeholderTextColor={styles.searchPlaceholder.color}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCorrect={false}
         />
       </View>
       {role === 'student' ? (
