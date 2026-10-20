@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Switch } from 'react-native';
+import {
+  Platform,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Switch,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -21,10 +30,37 @@ import type {
 } from '../types/event';
 import { styles } from '../styles/EventScreen.style';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type EventScreenProps = {
   role: UserRole;
   account?: Account;
+};
+
+const formatDateForInput = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateInput = (value: string): Date | undefined => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    return undefined;
+  }
+
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) ? undefined : date;
+};
+
+const getCalendarDays = (month: Date): Array<number | null> => {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  return [
+    ...Array.from({ length: firstDay }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+  ];
 };
 
 type AttendanceForm = {
@@ -75,6 +111,11 @@ export default function EventScreen({ role, account }: EventScreenProps) {
   const [eventToArchive, setEventToArchive] = useState<EventRecord | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [attendeeSearchQuery, setAttendeeSearchQuery] = useState('');
+  const [datePickerField, setDatePickerField] = useState<'startDate' | 'endDate' | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
   const [isEditingAttendees, setIsEditingAttendees] = useState(false);
   const [selectedAttendee, setSelectedAttendee] = useState<AttendanceRecord | null>(null);
   const [attendeeToDelete, setAttendeeToDelete] = useState<AttendanceRecord | null>(null);
@@ -209,6 +250,31 @@ export default function EventScreen({ role, account }: EventScreenProps) {
     setEventForm((currentForm) => ({ ...currentForm, [field]: value }));
     setFormError('');
     setSuccessMessage('');
+  };
+
+  const openDatePicker = (field: 'startDate' | 'endDate') => {
+    const selectedDate = parseDateInput(eventForm[field]) ?? new Date();
+    setCalendarMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+    setDatePickerField(field);
+  };
+
+  const selectCalendarDate = (day: number) => {
+    if (!datePickerField) return;
+
+    const selectedDate = new Date(
+      calendarMonth.getFullYear(),
+      calendarMonth.getMonth(),
+      day,
+    );
+    const minimumDate =
+      datePickerField === 'endDate' ? parseDateInput(eventForm.startDate) : undefined;
+
+    if (minimumDate && selectedDate < minimumDate) {
+      return;
+    }
+
+    updateEventForm(datePickerField, formatDateForInput(selectedDate));
+    setDatePickerField(null);
   };
 
   const handleCreateEvent = async () => {
@@ -364,18 +430,126 @@ export default function EventScreen({ role, account }: EventScreenProps) {
             value={eventForm.name}
             onChangeText={(value) => updateEventForm('name', value)}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Start date (YYYY-MM-DD)"
-            value={eventForm.startDate}
-            onChangeText={(value) => updateEventForm('startDate', value)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="End date (YYYY-MM-DD)"
-            value={eventForm.endDate}
-            onChangeText={(value) => updateEventForm('endDate', value)}
-          />
+          <TouchableOpacity
+            style={styles.datePickerInput}
+            onPress={() => openDatePicker('startDate')}
+            accessibilityRole="button"
+            accessibilityLabel="Choose event start date"
+          >
+            <Text style={eventForm.startDate ? styles.datePickerValue : styles.datePickerPlaceholder}>
+              {eventForm.startDate || 'Start date (YYYY-MM-DD)'}
+            </Text>
+            <Ionicons name="calendar-outline" size={18} color={styles.searchIcon.color} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.datePickerInput}
+            onPress={() => openDatePicker('endDate')}
+            accessibilityRole="button"
+            accessibilityLabel="Choose event end date"
+          >
+            <Text style={eventForm.endDate ? styles.datePickerValue : styles.datePickerPlaceholder}>
+              {eventForm.endDate || 'End date (YYYY-MM-DD)'}
+            </Text>
+            <Ionicons name="calendar-outline" size={18} color={styles.searchIcon.color} />
+          </TouchableOpacity>
+          {datePickerField && Platform.OS !== 'web' ? (
+            <DateTimePicker
+              value={
+                parseDateInput(eventForm[datePickerField]) ??
+                new Date()
+              }
+              mode="date"
+              display="default"
+              minimumDate={
+                datePickerField === 'endDate'
+                  ? parseDateInput(eventForm.startDate)
+                  : undefined
+              }
+              onChange={(_event, selectedDate) => {
+                if (selectedDate) {
+                  updateEventForm(datePickerField, formatDateForInput(selectedDate));
+                }
+                setDatePickerField(null);
+              }}
+            />
+          ) : null}
+          {datePickerField && Platform.OS === 'web' ? (
+            <Modal
+              visible
+              transparent
+              animationType="fade"
+              onRequestClose={() => setDatePickerField(null)}
+            >
+              <View style={styles.calendarOverlay}>
+                <View style={styles.calendarPanel}>
+                  <Text style={styles.calendarTitle}>
+                    Choose {datePickerField === 'startDate' ? 'start' : 'end'} date
+                  </Text>
+                  <View style={styles.calendarHeader}>
+                    <TouchableOpacity
+                      style={styles.calendarNavigationButton}
+                      onPress={() =>
+                        setCalendarMonth(
+                          new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1),
+                        )
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel="Previous month"
+                    >
+                      <Text style={styles.calendarNavigationText}>‹</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.calendarMonthLabel}>
+                      {calendarMonth.toLocaleDateString(undefined, {
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.calendarNavigationButton}
+                      onPress={() =>
+                        setCalendarMonth(
+                          new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1),
+                        )
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel="Next month"
+                    >
+                      <Text style={styles.calendarNavigationText}>›</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.calendarWeekRow}>
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                      <Text key={day} style={styles.calendarWeekDay}>{day}</Text>
+                    ))}
+                  </View>
+                  <View style={styles.calendarGrid}>
+                    {getCalendarDays(calendarMonth).map((day, index) => (
+                      <TouchableOpacity
+                        key={`${calendarMonth.toISOString()}-${index}`}
+                        style={styles.calendarDay}
+                        disabled={day === null}
+                        onPress={() => {
+                          if (day !== null) selectCalendarDate(day);
+                        }}
+                        accessibilityRole={day === null ? undefined : 'button'}
+                      >
+                        <Text style={day === null ? styles.calendarEmptyDay : styles.calendarDayText}>
+                          {day ?? ''}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <TouchableOpacity
+                    style={styles.calendarCancelButton}
+                    onPress={() => setDatePickerField(null)}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.calendarCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          ) : null}
           <TextInput
             style={styles.input}
             placeholder="Location"

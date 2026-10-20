@@ -27,12 +27,13 @@
     },
     "plugins": [
       "expo-font",
-        [
-          "expo-camera",
-          {
-            "cameraPermission": "Allow this app to scan student QR codes."
-          }
-        ]
-      ]
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow this app to scan student QR codes."
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ]
   }
 }
