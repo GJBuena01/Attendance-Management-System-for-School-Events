@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { archiveEvent, getEventAttendance, getEvents, getStudentAttendance } from '../api/events';
+import {
+  archiveEvent,
+  deleteAttendance,
+  getEventAttendance,
+  getEvents,
+  getStudentAttendance,
+} from '../api/events';
 import type { Account, AttendanceRecord, EventRecord, StudentAttendanceRecord, UserRole } from '../types/event';
 import { styles } from '../styles/HomeScreen.style';
 import StudentQrModal from '../components/StudentQrModal';
@@ -24,6 +30,9 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
   const [isQrVisible, setIsQrVisible] = useState(false);
   const [eventToArchive, setEventToArchive] = useState<EventRecord | null>(null);
   const [attendeeSearchQuery, setAttendeeSearchQuery] = useState('');
+  const [isEditingAttendees, setIsEditingAttendees] = useState(false);
+  const [selectedAttendee, setSelectedAttendee] = useState<AttendanceRecord | null>(null);
+  const [attendeeToDelete, setAttendeeToDelete] = useState<AttendanceRecord | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -101,9 +110,31 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
     setEventToArchive(event);
   };
 
+  const confirmDeleteAttendee = (record: AttendanceRecord) => {
+    setAttendeeToDelete(record);
+  };
+
+  const removeAttendee = async () => {
+    if (!attendeeToDelete) return;
+
+    try {
+      await deleteAttendance(attendeeToDelete.id);
+      setRecords((currentRecords) =>
+        currentRecords.filter((record) => record.id !== attendeeToDelete.id),
+      );
+      setAttendeeToDelete(null);
+      setIsEditingAttendees(false);
+      setSelectedAttendee(null);
+    } catch {
+      setHasError(true);
+    }
+  };
+
   const selectEvent = async (event: EventRecord) => {
     setSelectedEvent(event);
     setAttendeeSearchQuery('');
+    setIsEditingAttendees(false);
+    setAttendeeToDelete(null);
     setIsAttendeeListVisible(false);
 
     if (role === 'officer') {
@@ -403,9 +434,25 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           />
         </View>
         <View style={styles.attendeeTableActions}>
-          <TouchableOpacity style={styles.editAttendeesButton} accessibilityRole="button">
+          {isEditingAttendees && selectedAttendee ? (
+            <TouchableOpacity
+              style={styles.deleteAttendeeButton}
+              onPress={() => confirmDeleteAttendee(selectedAttendee)}
+              accessibilityRole="button"
+            >
+              <Ionicons name="trash-outline" size={17} color={styles.deleteAttendeeText.color} />
+              <Text style={styles.deleteAttendeeText}>Delete attendee</Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity
+            style={styles.editAttendeesButton}
+            onPress={() => setIsEditingAttendees((currentValue) => !currentValue)}
+            accessibilityRole="button"
+          >
             <Ionicons name="create-outline" size={17} color={styles.editAttendeesText.color} />
-            <Text style={styles.editAttendeesText}>Edit attendees</Text>
+            <Text style={styles.editAttendeesText}>
+              {isEditingAttendees ? 'Done editing' : 'Edit attendees'}
+            </Text>
           </TouchableOpacity>
         </View>
         {(() => {
@@ -442,12 +489,19 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
                       <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>Scanned by</Text>
                     </View>
                     {filteredAttendees.map((record, index) => (
-                      <View
+                      <TouchableOpacity
                         key={record.id}
                         style={[
                           styles.attendanceTableRow,
                           index % 2 === 1 ? styles.attendanceTableAlternateRow : null,
+                          isEditingAttendees && selectedAttendee?.id === record.id
+                            ? styles.selectedAttendeeRow
+                            : null,
                         ]}
+                        onPress={() => {
+                          if (isEditingAttendees) setSelectedAttendee(record);
+                        }}
+                        disabled={!isEditingAttendees}
                       >
                         <Text style={[styles.attendanceTableCell, styles.attendanceTableStudentId]}>
                           {record.studentId}
@@ -464,7 +518,7 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
                         <Text style={[styles.attendanceTableCell, styles.attendanceTableScanner]}>
                           {record.scannedBy}
                         </Text>
-                      </View>
+                      </TouchableOpacity>
                     ))}
                   </View>
                 </ScrollView>
@@ -473,6 +527,37 @@ export default function HomeScreen({ role, account }: HomeScreenProps) {
           );
         })()}
       </SafeAreaView>
+    </Modal>
+    <Modal
+      visible={attendeeToDelete !== null}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setAttendeeToDelete(null)}
+    >
+      <View style={styles.confirmationOverlay}>
+        <View style={styles.confirmationPanel}>
+          <Text style={styles.confirmationTitle}>Delete attendance?</Text>
+          <Text style={styles.confirmationMessage}>
+            Remove {attendeeToDelete?.fullName} ({attendeeToDelete?.studentId}) from this event?
+          </Text>
+          <View style={styles.confirmationActions}>
+            <TouchableOpacity
+              style={styles.confirmationCancelButton}
+              onPress={() => setAttendeeToDelete(null)}
+              accessibilityRole="button"
+            >
+              <Text style={styles.confirmationCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.confirmationDeleteButton}
+              onPress={() => void removeAttendee()}
+              accessibilityRole="button"
+            >
+              <Text style={styles.confirmationDeleteText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
     </Modal>
     <Modal
       visible={eventToArchive !== null}

@@ -17,3 +17,11 @@ export const listStudentAttendance = (request: Request, response: Response): voi
 		sendControllerError(response, error, "Failed to retrieve student attendance");
 	}
 };
+
+export const deleteAttendance = (request: Request, response: Response): void => {
+	try {
+		response.json(attendancesService.deleteAttendance(String(request.params.attendanceId)));
+	} catch (error) {
+		sendControllerError(response, error, "Failed to delete attendance record");
+	}
+};

@@ -70,6 +70,13 @@ export async function recordAttendance(input: {
   return parseResponse(response);
 }
 
+export async function deleteAttendance(attendanceId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/attendance/${attendanceId}`, {
+    method: 'DELETE',
+  });
+  await parseResponse(response);
+}
+
 export async function getStudentAttendance(
   studentId: string,
 ): Promise<StudentAttendanceRecord[]> {

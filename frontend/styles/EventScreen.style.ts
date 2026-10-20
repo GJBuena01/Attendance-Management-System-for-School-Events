@@ -265,6 +265,16 @@ export const styles = StyleSheet.create({
     color: colors.yellow,
     fontWeight: '800',
   },
+  confirmationDeleteButton: {
+    backgroundColor: colors.danger,
+    borderRadius: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  confirmationDeleteText: {
+    color: colors.surface,
+    fontWeight: '800',
+  },
   attendeeTableActions: {
     alignItems: 'flex-end',
     marginBottom: 10,
@@ -282,6 +292,24 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     marginLeft: 6,
+  },
+  deleteAttendeeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.dangerSoft,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginRight: 8,
+  },
+  deleteAttendeeText: {
+    color: colors.danger,
+    fontSize: 13,
+    fontWeight: '700',
+    marginLeft: 6,
+  },
+  selectedAttendeeRow: {
+    backgroundColor: '#FFF7D6',
   },
   recordInfo: {
     flex: 1,

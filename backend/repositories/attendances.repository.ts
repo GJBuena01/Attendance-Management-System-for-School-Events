@@ -91,6 +91,16 @@ export const listEventAttendance = (eventId: number): AttendanceRecord[] => {
 	return rows.map(toAttendanceRecord);
 };
 
+export const attendanceExists = (attendanceId: number): boolean =>
+	Boolean(database.prepare("SELECT 1 FROM attendances WHERE id = ?").get(attendanceId));
+
+export const deleteAttendance = (attendanceId: number): boolean => {
+	const result = database
+		.prepare("DELETE FROM attendances WHERE id = ?")
+		.run(attendanceId);
+	return result.changes > 0;
+};
+
 export const listStudentAttendance = (studentId: string): StudentAttendanceRecord[] => {
 	const rows = database
 		.prepare(
