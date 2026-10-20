@@ -39,8 +39,6 @@ database.exec(`
 		end_date TEXT NOT NULL,
 		location TEXT NOT NULL,
 		created_at TEXT NOT NULL,
-		has_am_attendance INTEGER NOT NULL DEFAULT 0,
-		has_pm_attendance INTEGER NOT NULL DEFAULT 0,
 		status TEXT NOT NULL DEFAULT 'starting_soon',
 		archived_at TEXT,
 		archived_by TEXT
@@ -87,6 +85,18 @@ if (studentColumns.has("password")) {
 
 database.exec("CREATE UNIQUE INDEX IF NOT EXISTS students_email_unique ON students(email)");
 database.exec("CREATE UNIQUE INDEX IF NOT EXISTS students_google_subject_unique ON students(google_subject)");
+
+const legacyEventColumns = new Set(
+	(database.prepare("PRAGMA table_info(events)").all() as Array<{ name: string }>).map(
+		(column) => column.name,
+	),
+);
+
+for (const column of ["has_am_attendance", "has_pm_attendance"]) {
+	if (legacyEventColumns.has(column)) {
+		database.exec(`ALTER TABLE events DROP COLUMN ${column}`);
+	}
+}
 
 const officerRoster = [
 	["Gerald", "Marfe"],

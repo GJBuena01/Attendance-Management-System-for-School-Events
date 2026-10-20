@@ -5,7 +5,7 @@ import { ServiceError } from "../types/service-error";
 import type { CreateEventInput } from "../types/event";
 
 const invalidEventMessage =
-	"name, startDate, endDate, location, and at least one attendance period are required";
+	"name, startDate, endDate, location, and description are required";
 
 export const createEvent = (input: unknown) => {
 	if (typeof input !== "object" || input === null) {
@@ -13,7 +13,7 @@ export const createEvent = (input: unknown) => {
 	}
 
 	const body = input as Record<string, unknown>;
-	const { name, description, location, hasAmAttendance, hasPmAttendance } = body;
+	const { name, description, location } = body;
 	const startDate = normalizeEventDate(body.startDate, "start");
 	const endDate = normalizeEventDate(body.endDate, "end");
 
@@ -21,12 +21,9 @@ export const createEvent = (input: unknown) => {
 		typeof name !== "string" ||
 		typeof description !== "string" ||
 		typeof location !== "string" ||
-		typeof hasAmAttendance !== "boolean" ||
-		typeof hasPmAttendance !== "boolean" ||
 		!name.trim() ||
 		!description.trim() ||
-		!location.trim() ||
-		(!hasAmAttendance && !hasPmAttendance)
+		!location.trim()
 	) {
 		throw new ServiceError(400, invalidEventMessage);
 	}
@@ -45,8 +42,6 @@ export const createEvent = (input: unknown) => {
 		startDate,
 		endDate,
 		location: location.trim(),
-		hasAmAttendance,
-		hasPmAttendance,
 	};
 
 	try {
@@ -75,19 +70,16 @@ export const updateEvent = (eventIdInput: string, input: unknown) => {
 	}
 
 	const body = input as Record<string, unknown>;
-	const { name, description, location, hasAmAttendance, hasPmAttendance } = body;
+	const { name, description, location } = body;
 	const startDate = normalizeEventDate(body.startDate, "start");
 	const endDate = normalizeEventDate(body.endDate, "end");
 	if (
 		typeof name !== "string" ||
 		typeof description !== "string" ||
 		typeof location !== "string" ||
-		typeof hasAmAttendance !== "boolean" ||
-		typeof hasPmAttendance !== "boolean" ||
 		!name.trim() ||
 		!description.trim() ||
 		!location.trim() ||
-		(!hasAmAttendance && !hasPmAttendance) ||
 		!startDate ||
 		!endDate
 	) {
@@ -109,8 +101,6 @@ export const updateEvent = (eventIdInput: string, input: unknown) => {
 			startDate,
 			endDate,
 			location: location.trim(),
-			hasAmAttendance,
-			hasPmAttendance,
 		});
 		if (!event) {
 			throw new ServiceError(409, "Archived events cannot be edited");

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -75,8 +74,6 @@ type EventForm = {
   endDate: string;
   location: string;
   description: string;
-  hasAmAttendance: boolean;
-  hasPmAttendance: boolean;
 };
 
 const emptyForm: AttendanceForm = {
@@ -89,8 +86,6 @@ const emptyEventForm: EventForm = {
   endDate: '',
   location: '',
   description: '',
-  hasAmAttendance: true,
-  hasPmAttendance: true,
 };
 
 export default function EventScreen({ role, account }: EventScreenProps) {
@@ -313,8 +308,6 @@ export default function EventScreen({ role, account }: EventScreenProps) {
       endDate: event.endDate,
       location: event.location,
       description: event.description,
-      hasAmAttendance: event.hasAmAttendance,
-      hasPmAttendance: event.hasPmAttendance,
     });
     setIsEventFormVisible(true);
     setFormError('');
@@ -340,20 +333,12 @@ export default function EventScreen({ role, account }: EventScreenProps) {
       return;
     }
 
-    if (!eventForm.hasAmAttendance && !eventForm.hasPmAttendance) {
-      setFormError('Select at least one attendance period.');
-      setSuccessMessage('');
-      return;
-    }
-
     const input: CreateEventInput = {
       name,
       startDate,
       endDate,
       location,
       description,
-      hasAmAttendance: eventForm.hasAmAttendance,
-      hasPmAttendance: eventForm.hasPmAttendance,
     };
 
     const wasEditing = editingEventId !== null;
@@ -617,27 +602,6 @@ export default function EventScreen({ role, account }: EventScreenProps) {
             onChangeText={(value) => updateEventForm('description', value)}
             multiline
           />
-          <View style={{ marginBottom: 8 }}>
-            <Text style={styles.formDescription}>Attendance periods</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <Switch
-                value={eventForm.hasAmAttendance}
-                onValueChange={(value) => setEventForm((currentForm) => ({ ...currentForm, hasAmAttendance: value }))}
-                trackColor={{ false: '#E9DFE1', true: '#6F1023' }}
-                thumbColor="#FFFFFF"
-              />
-              <Text>AM attendance</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Switch
-                value={eventForm.hasPmAttendance}
-                onValueChange={(value) => setEventForm((currentForm) => ({ ...currentForm, hasPmAttendance: value }))}
-                trackColor={{ false: '#E9DFE1', true: '#6F1023' }}
-                thumbColor="#FFFFFF"
-              />
-              <Text>PM attendance</Text>
-            </View>
-          </View>
           {formError ? (
             <View style={styles.errorPanel}>
               <Text style={styles.errorText}>{formError}</Text>

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "thrilled-green-chips",
+    "name": "EVENTRA",
     "slug": "snack-c9d6cf78-eb46-4559-9f20-b3c915fed8c7",
     "scheme": "com.kenn.eventra",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/AppLogoQR_draft.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -18,7 +18,7 @@
     "android": {
       "package": "com.kenn.eventra",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/AppLogoQR_draft.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

@@ -8,8 +8,6 @@ type EventRow = {
 	startDate: string;
 	endDate: string;
 	location: string;
-	hasAmAttendance: number | boolean;
-	hasPmAttendance: number | boolean;
 	createdAt: string;
 	status: EventRecord["status"];
 	archivedAt: string | null;
@@ -23,8 +21,6 @@ const toEventRecord = (row: EventRow): EventRecord => ({
 	startDate: row.startDate,
 	endDate: row.endDate,
 	location: row.location,
-	hasAmAttendance: Boolean(row.hasAmAttendance),
-	hasPmAttendance: Boolean(row.hasPmAttendance),
 	createdAt: row.createdAt,
 	status: row.status,
 	archivedAt: row.archivedAt,
@@ -32,8 +28,7 @@ const toEventRecord = (row: EventRow): EventRecord => ({
 });
 
 const eventColumns = `id, name, description, start_date AS startDate,
-	end_date AS endDate, location, has_am_attendance AS hasAmAttendance,
-	has_pm_attendance AS hasPmAttendance, created_at AS createdAt,
+	end_date AS endDate, location, created_at AS createdAt,
 	status, archived_at AS archivedAt, archived_by AS archivedBy`;
 
 export const createEvent = (input: CreateEventInput): EventRecord => {
@@ -42,8 +37,8 @@ export const createEvent = (input: CreateEventInput): EventRecord => {
 		.prepare(
 			`INSERT INTO events
 				(name, description, start_date, end_date, location,
-				 has_am_attendance, has_pm_attendance, created_at, status)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				 created_at, status)
+			 VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		)
 		.run(
 			input.name,
@@ -51,8 +46,6 @@ export const createEvent = (input: CreateEventInput): EventRecord => {
 			input.startDate,
 			input.endDate,
 			input.location,
-			input.hasAmAttendance ? 1 : 0,
-			input.hasPmAttendance ? 1 : 0,
 			createdAt,
 			"starting_soon",
 		);
@@ -72,8 +65,7 @@ export const updateEvent = (eventId: number, input: CreateEventInput): EventReco
 	const result = database
 		.prepare(
 			`UPDATE events
-			 SET name = ?, description = ?, start_date = ?, end_date = ?, location = ?,
-				has_am_attendance = ?, has_pm_attendance = ?
+			 SET name = ?, description = ?, start_date = ?, end_date = ?, location = ?
 			 WHERE id = ? AND archived_at IS NULL`,
 		)
 		.run(
@@ -82,8 +74,6 @@ export const updateEvent = (eventId: number, input: CreateEventInput): EventReco
 			input.startDate,
 			input.endDate,
 			input.location,
-			input.hasAmAttendance ? 1 : 0,
-			input.hasPmAttendance ? 1 : 0,
 			eventId,
 		);
 
