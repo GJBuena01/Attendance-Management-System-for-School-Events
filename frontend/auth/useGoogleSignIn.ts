@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { AuthSessionResult } from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { signInWithGoogle } from '../api/auth';
@@ -9,6 +10,21 @@ WebBrowser.maybeCompleteAuthSession();
 type GoogleSignInOptions = {
   onSuccess: (account: Account) => void;
   onError: (message: string) => void;
+};
+
+const getIdToken = (response: AuthSessionResult): string | undefined => {
+  if (response.type !== 'success') return undefined;
+
+  const authenticationToken = response.authentication?.idToken;
+  const parameterToken = response.params?.id_token ?? response.params?.idToken;
+
+  for (const token of [authenticationToken, parameterToken]) {
+    if (typeof token === 'string' && token.trim().length > 0) {
+      return token;
+    }
+  }
+
+  return undefined;
 };
 
 export function useGoogleSignIn({ onSuccess, onError }: GoogleSignInOptions) {
@@ -29,7 +45,7 @@ export function useGoogleSignIn({ onSuccess, onError }: GoogleSignInOptions) {
       return;
     }
 
-    const idToken = response.authentication?.idToken ?? response.params?.id_token;
+    const idToken = getIdToken(response);
     if (!idToken) {
       onError('Google did not return an identity token.');
       return;
