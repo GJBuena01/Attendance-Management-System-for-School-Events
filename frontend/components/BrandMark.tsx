@@ -17,7 +17,7 @@ export default function BrandMark({
       }}
     >
       <Image
-        source={require('../../assets/AppLogoQR_draft.png')}
+        source={require('../../assets/AppLogo3.png')}
         style={{
           width: compact ? 42 : 76,
           height: compact ? 42 : 76,
@@ -36,7 +36,7 @@ export default function BrandMark({
             flexShrink: 1,
           }}
         >
-          SCHOOL ATTENDANCE
+          EVENTRA
         </Text>
         {!compact ? (
           <Text
@@ -49,7 +49,7 @@ export default function BrandMark({
               textAlign: vertical ? 'center' : 'left',
             }}
           >
-            EVENT MANAGEMENT
+            SCHOOL EVENT ATTENDANCE MANAGEMENT
           </Text>
         ) : null}
       </View>

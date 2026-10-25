@@ -255,6 +255,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
     marginLeft: 8,
+    marginBottom: 8,
   },
   eventStatusBadge: {
     alignSelf: 'flex-start',
@@ -306,7 +307,8 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 7,
-    marginLeft: 8,
+    marginLeft: 3,
+    marginBottom: 8,
   },
   archiveEventText: {
     color: colors.maroon,
