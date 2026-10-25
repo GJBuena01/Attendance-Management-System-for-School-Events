@@ -5,7 +5,7 @@
     "scheme": "com.kenn.eventra",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/AppLogoQR_draft.png",
+    "icon": "./assets/AppLogo3.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -18,8 +18,7 @@
     "android": {
       "package": "com.kenn.eventra",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/AppLogoQR_draft.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/AppLogo3.png"
       },
       "permissions": [
         "android.permission.CAMERA",
