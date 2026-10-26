@@ -18,14 +18,19 @@ const createStudentId = (): string => {
 };
 
 const verifyGoogleToken = async (token: string): Promise<GoogleIdentity> => {
-	if (!process.env.GOOGLE_CLIENT_ID) {
+	const acceptedAudiences = [
+		process.env.GOOGLE_CLIENT_ID,
+		process.env.GOOGLE_ANDROID_CLIENT_ID,
+	].filter((value): value is string => Boolean(value));
+
+	if (acceptedAudiences.length === 0) {
 		throw new ServiceError(500, "Google authentication is not configured");
 	}
 
 	try {
 		const ticket = await googleClient.verifyIdToken({
 			idToken: token,
-			audience: process.env.GOOGLE_CLIENT_ID,
+			audience: acceptedAudiences,
 		});
 		const payload = ticket.getPayload();
 		if (!payload?.sub || !payload.email || payload.email_verified !== true || !payload.given_name || !payload.family_name) {
