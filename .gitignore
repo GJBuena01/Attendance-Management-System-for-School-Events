@@ -2,7 +2,6 @@
 
 # dependencies
 node_modules/
-*.db
 *.sqlite
 *.sqlite3
 
@@ -45,6 +44,5 @@ yarn-error.*
 /android
 
 #db
-*.db
 *.sqlite
 *.sqlite3
